@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-    <title>Vokabel Trainer Cloud Portal</title>
+    <title>Vocabulary Trainer Cloud Portal</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Modul Import -->
+    <!-- Module Import -->
     <script type="module" src="./storage.js"></script>
 
     <style>
-        /* --- DEINE FARBEN --- */
+        /* --- YOUR COLORS --- */
         @keyframes livingGradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -59,7 +59,7 @@
 
         .auth-card:active { transform: scale(0.96); }
 
-        /* Apple Button Spezial */
+        /* Apple Button Special */
         .auth-card.apple {
             background: rgba(0, 0, 0, 0.85);
             color: white;
@@ -68,7 +68,7 @@
         .auth-card.apple:active { background: #000; }
         .auth-card.apple .text-slate-500 { color: rgba(255,255,255,0.6); }
 
-        /* Status Badge Animation (Der grüne Puls) */
+        /* Status Badge Animation (Green Pulse) */
         @keyframes border-pulse {
             0% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
             70% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
@@ -78,16 +78,13 @@
             animation: border-pulse 2s infinite;
             background: rgba(240, 253, 244, 0.95) !important;
         }
-        /* Wenn Apple aktiv ist, muss der Hintergrund dunkelgrün statt hellgrün sein, damit Text lesbar bleibt */
         .auth-card.apple.status-active {
             background: rgba(20, 83, 45, 0.95) !important;
             border-color: #4ade80 !important;
         }
 
-        /* Notches */
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         
-        /* Loading Overlay für Cards */
         .card-loader {
             position: absolute;
             inset: 0;
@@ -125,7 +122,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-slate-800 tracking-tight leading-none">Cloud Sync</h1>
-                    <p class="text-xs font-bold text-slate-500/80 mt-1" id="status-text">Lade Status...</p>
+                    <p class="text-xs font-bold text-slate-500/80 mt-1" id="status-text">Loading status...</p>
                 </div>
             </div>
             
@@ -148,9 +145,8 @@
                 </div>
                 <div class="hidden sm:block">
                     <h3 class="font-bold text-lg mb-0.5">Apple</h3>
-                    <p class="text-xs text-slate-400 font-medium">Empfohlen für iOS</p>
+                    <p class="text-xs text-slate-400 font-medium">Recommended for iOS</p>
                 </div>
-                <!-- Checkmark für aktiven Status (versteckt per Default) -->
                 <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-400 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
@@ -165,7 +161,7 @@
                 </div>
                 <div class="hidden sm:block">
                     <h3 class="font-bold text-lg text-slate-700 mb-0.5">Google</h3>
-                    <p class="text-xs text-slate-500 font-medium">Dauerhafter Speicher</p>
+                    <p class="text-xs text-slate-500 font-medium">Permanent Storage</p>
                 </div>
                 <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
@@ -177,10 +173,10 @@
                     <div class="p-1.5 bg-indigo-100 rounded-lg text-indigo-600">
                         <i data-lucide="ghost" class="w-5 h-5"></i>
                     </div>
-                    <span class="sm:hidden font-bold text-slate-700 text-base">Anonym Starten</span>
+                    <span class="sm:hidden font-bold text-slate-700 text-base">Start Anonymously</span>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Anonym</h3>
+                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Anonymous</h3>
                     <p class="text-xs text-slate-500 font-medium">Sync via Code</p>
                 </div>
                 <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
@@ -194,34 +190,53 @@
                         <i data-lucide="hard-drive" class="w-5 h-5"></i>
                     </div>
                     <div class="sm:hidden flex flex-col">
-                        <span class="font-bold text-slate-600 text-base">Nur Lokal</span>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Kein Sync</span>
+                        <span class="font-bold text-slate-600 text-base">Local Only</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">No Sync</span>
                     </div>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg text-slate-600 mb-0.5">Lokal</h3>
-                    <p class="text-xs text-slate-400 font-medium">Offline Modus</p>
+                    <h3 class="font-bold text-lg text-slate-600 mb-0.5">Local</h3>
+                    <p class="text-xs text-slate-400 font-medium">Offline Mode</p>
                 </div>
                 <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
         </div>
 
-        <!-- ID Display & Info -->
+        <!-- NEW: Short ID Display & Actions (Visible when logged in) -->
+        <div id="short-id-section" class="hidden mt-4 p-4 bg-white/40 rounded-xl border border-white/60 flex flex-col items-center animate-pop shadow-sm">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Your Sync-ID</span>
+            <div class="flex items-center gap-3">
+                <span id="display-short-id" class="text-3xl font-black text-indigo-600 tracking-widest font-mono">...</span>
+            </div>
+            
+            <div class="flex gap-2 mt-3 w-full sm:w-auto">
+                <button id="btn-copy-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-indigo-600 rounded-lg text-xs font-bold shadow-sm border border-indigo-100 hover:bg-indigo-50 active:scale-95 transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+                </button>
+                <button id="btn-share-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Share
+                </button>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-2 text-center max-w-[220px] leading-tight">
+                Use this code to restore your learning progress on other devices.
+            </p>
+        </div>
+
+        <!-- Footer Info -->
         <div class="mt-6 pt-4 border-t border-slate-200/50 flex flex-col items-center gap-2 text-center">
             
-            <!-- User ID Display (Nur wenn eingeloggt) -->
-            <div id="uid-container" class="hidden w-full bg-slate-100/50 rounded-lg p-2 mb-2 flex justify-between items-center text-xs">
-                <span class="text-slate-500 font-bold ml-2">ID:</span>
-                <span id="display-uid" class="font-mono text-slate-700 select-all mr-2">...</span>
+            <!-- Technical UID (Debug/Support) -->
+            <div id="uid-container" class="hidden text-[10px] text-slate-300 font-mono mb-1 select-all">
+                UID: <span id="display-uid">...</span>
             </div>
 
             <div class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold bg-white/30 px-3 py-1 rounded-full">
                 <i data-lucide="shield-check" class="w-3 h-3 text-green-600"></i>
-                <span>SSL Verschlüsselt & DSGVO Konform</span>
+                <span>Encrypted & GDPR Compliant</span>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 pb-safe">
-                Safe Area Protected • v9.5 Portal
+                Safe Area Protected • v9.6 ID-Sync
             </div>
         </div>
     </div>
@@ -229,7 +244,7 @@
     <script type="module">
         import { loadState, saveState } from './storage.js';
 
-        // UI-Elemente
+        // UI Elements
         const cards = {
             apple: document.getElementById('card-apple'),
             google: document.getElementById('card-google'),
@@ -237,10 +252,43 @@
             local: document.getElementById('card-local')
         };
         const statusText = document.getElementById('status-text');
+        
+        // ID Section
+        const shortIdSection = document.getElementById('short-id-section');
+        const shortIdDisplay = document.getElementById('display-short-id');
         const uidContainer = document.getElementById('uid-container');
         const uidDisplay = document.getElementById('display-uid');
+        
+        const btnCopy = document.getElementById('btn-copy-id');
+        const btnShare = document.getElementById('btn-share-id');
 
-        // Hilfsfunktion: Loading Spinner zeigen
+        // --- Helper: Clipboard Copy (Robust) ---
+        async function copyTextToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (e) { console.warn("Clipboard API fail:", e); }
+            }
+            // Fallback
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                return successful;
+            } catch (err) {
+                document.body.removeChild(textArea);
+                return false;
+            }
+        }
+
+        // --- Helper: Loading & Active ---
         const setLoading = (cardKey, isLoading) => {
             const card = cards[cardKey];
             if(!card) return;
@@ -249,12 +297,10 @@
             else loader.classList.remove('visible');
         };
 
-        // Hilfsfunktion: Aktive Karte markieren
         const setActiveCard = (activeKey) => {
             Object.keys(cards).forEach(key => {
                 const card = cards[key];
                 const icon = card.querySelector('.active-icon');
-                
                 if (key === activeKey) {
                     card.classList.add('status-active');
                     if(icon) icon.classList.remove('hidden');
@@ -265,71 +311,135 @@
             });
         };
 
-        // UI Update Logik (Das "Gehirn")
+        // --- Short ID Logic ---
+        async function updateShortID(uid) {
+            const state = window.VTrainer.loadState();
+            
+            // 1. Do we already have the ID locally?
+            if (state.settings.cloudShortId) {
+                shortIdDisplay.textContent = state.settings.cloudShortId;
+                shortIdSection.classList.remove('hidden');
+                return;
+            }
+
+            // 2. No, so fetch it
+            shortIdDisplay.textContent = "...";
+            shortIdSection.classList.remove('hidden'); // Show loader
+            
+            try {
+                const id = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
+                if(id) {
+                    shortIdDisplay.textContent = id;
+                    // State was already saved in getOrRegisterShortId
+                } else {
+                    shortIdDisplay.textContent = "ERROR";
+                }
+            } catch(e) {
+                console.error("ID Fetch Error", e);
+                shortIdDisplay.textContent = "ERR";
+            }
+        }
+
+        // --- Main UI Update ---
         const updateUI = (user) => {
             const state = window.VTrainer.loadState();
             
             if (user) {
-                // Eingeloggt
+                // Logged in
                 uidContainer.classList.remove('hidden');
                 uidDisplay.textContent = user.uid;
 
+                // Load Short ID
+                updateShortID(user.uid);
+
                 if (user.isAnonymous) {
                     setActiveCard('anon');
-                    statusText.textContent = "Angemeldet als Gast";
+                    statusText.textContent = "Logged in as Guest";
                 } else {
-                    // Check Provider
                     const isApple = user.providerData.some(p => p.providerId === 'apple.com');
                     const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
                     
                     if (isApple) {
                         setActiveCard('apple');
-                        statusText.textContent = "Verbunden mit Apple";
+                        statusText.textContent = "Connected with Apple";
                     } else if (isGoogle) {
                         setActiveCard('google');
-                        statusText.textContent = "Verbunden mit Google";
+                        statusText.textContent = "Connected with Google";
                     } else {
-                        // Fallback (z.B. Email)
                         setActiveCard('anon'); 
                     }
                 }
             } else {
-                // Ausgeloggt / Lokal
+                // Logged out / Local
                 uidContainer.classList.add('hidden');
+                shortIdSection.classList.add('hidden');
+                
                 if (state.settings.isCloudEnabled === false) {
                     setActiveCard('local');
-                    statusText.textContent = "Lokal (Offline)";
+                    statusText.textContent = "Local (Offline)";
                 } else {
-                    // Keine klare Wahl getroffen
                     setActiveCard(null);
-                    statusText.textContent = "Bitte wählen...";
+                    statusText.textContent = "Please select...";
                 }
+            }
+        };
+
+        // --- Action Buttons ---
+        
+        btnCopy.onclick = async () => {
+            const txt = shortIdDisplay.textContent;
+            if(txt && txt !== "..." && txt !== "ERROR") {
+                const success = await copyTextToClipboard(txt);
+                if(success) {
+                    const original = btnCopy.innerHTML;
+                    btnCopy.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copied!';
+                    btnCopy.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                    if(window.lucide) lucide.createIcons();
+                    setTimeout(() => {
+                        btnCopy.innerHTML = original;
+                        btnCopy.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
+                        if(window.lucide) lucide.createIcons();
+                    }, 2000);
+                }
+            }
+        };
+
+        btnShare.onclick = async () => {
+            const txt = shortIdDisplay.textContent;
+            if(!txt || txt === "..." || txt === "ERROR") return;
+
+            const shareData = {
+                title: 'My Vocabulary Trainer Code',
+                text: `Here is my Vocabulary Trainer code for sync: ${txt}`,
+            };
+
+            if (navigator.share) {
+                try { await navigator.share(shareData); } catch(e) { console.log(e); }
+            } else {
+                // Fallback Copy
+                btnCopy.click();
+                alert("Sharing not supported by this browser. Code copied to clipboard.");
             }
         };
 
         // --- INIT ---
         setTimeout(async () => {
             if(window.lucide) lucide.createIcons();
-            
-            // Warte auf Auth Init
             try {
                 const user = await window.VTrainerCloud.initAuth();
                 updateUI(user);
             } catch(e) {
                 console.error(e);
-                statusText.textContent = "Fehler beim Laden";
+                statusText.textContent = "Error loading status";
             }
         }, 100);
 
-        // --- CLICK HANDLERS (Die Logik aus test.html) ---
+        // --- CARD CLICKS ---
 
-        // 1. APPLE
         cards.apple.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
-            
-            // Upgrade Pfad (Anon -> Apple)
             if (currentUser && currentUser.isAnonymous) {
-                if(confirm("Möchtest du deinen aktuellen Spielstand mit deiner Apple ID sichern?")) {
+                if(confirm("Do you want to save your current learning progress with your Apple ID?")) {
                     setLoading('apple', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToApple();
@@ -338,16 +448,12 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        alert("Erfolgreich mit Apple verknüpft!");
-                    } catch(e) {
-                        alert("Fehler: " + e.message);
-                    }
+                        alert("Successfully linked with Apple!");
+                    } catch(e) { alert("Error: " + e.message); }
                     setLoading('apple', false);
                     return;
                 }
             }
-
-            // Normaler Login
             setLoading('apple', true);
             try {
                 const user = await window.VTrainerCloud.loginApple();
@@ -356,20 +462,14 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) {
-                console.error(e);
-                // Kein Alert bei Abbruch durch User
-                if (e.code !== 'auth/popup-closed-by-user') alert("Login Fehler: " + e.message);
-            }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') alert("Login Error: " + e.message); }
             setLoading('apple', false);
         };
 
-        // 2. GOOGLE
         cards.google.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
-            
             if (currentUser && currentUser.isAnonymous) {
-                if(confirm("Möchtest du deinen aktuellen Spielstand mit deinem Google Konto sichern?")) {
+                if(confirm("Do you want to save your current learning progress with your Google Account?")) {
                     setLoading('google', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToGoogle();
@@ -378,15 +478,12 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        alert("Erfolgreich mit Google verknüpft!");
-                    } catch(e) {
-                        alert("Fehler: " + e.message);
-                    }
+                        alert("Successfully linked with Google!");
+                    } catch(e) { alert("Error: " + e.message); }
                     setLoading('google', false);
                     return;
                 }
             }
-
             setLoading('google', true);
             try {
                 const user = await window.VTrainerCloud.loginGoogle();
@@ -395,16 +492,13 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) {
-                if (e.code !== 'auth/popup-closed-by-user') alert("Login Fehler: " + e.message);
-            }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') alert("Login Error: " + e.message); }
             setLoading('google', false);
         };
 
-        // 3. ANONYM
         cards.anon.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
-            if(currentUser && currentUser.isAnonymous) return; // Schon anonym
+            if(currentUser && currentUser.isAnonymous) return; 
 
             setLoading('anon', true);
             try {
@@ -412,53 +506,37 @@
                 const state = window.VTrainer.loadState();
                 state.settings.authMethod = 'anonymous';
                 state.settings.isCloudEnabled = true;
-                
-                // Short ID holen
                 await window.VTrainerCloud.getOrRegisterShortId(user.uid, state);
-                
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) {
-                alert("Fehler: " + e.message);
-            }
+            } catch(e) { alert("Error: " + e.message); }
             setLoading('anon', false);
         };
 
-        // 4. LOKAL
         cards.local.onclick = async () => {
             const user = window.VTrainerCloud.getUser();
-            if(!user) return; // Schon lokal
+            if(!user) return; 
 
-            if(!confirm("Verbindung zur Cloud trennen?")) return;
-
+            if(!confirm("Disconnect from Cloud?")) return;
             let deleteCloud = false;
-            // Datenschutz Abfrage
             if (user) {
-                deleteCloud = confirm(
-                    "Möchtest du deine Daten in der Cloud (inkl. Backup) vollständig löschen?\n\nOK = Ja, löschen\nAbbrechen = Nein, behalten"
-                );
+                deleteCloud = confirm("Do you want to completely delete your data in the cloud (including backup)?\n\nOK = Yes, delete\nCancel = No, keep data");
             }
 
             setLoading('local', true);
             try {
                 const state = window.VTrainer.loadState();
-                
                 if (deleteCloud && user) {
                     await window.VTrainerCloud.deleteCompleteUserData(user.uid, state.settings.cloudShortId);
                 }
-
                 await window.VTrainerCloud.logout();
-                
                 state.settings.isCloudEnabled = false;
                 state.settings.authMethod = 'local';
                 state.settings.cloudShortId = null;
                 window.VTrainer.saveState(state);
-                
                 updateUI(null);
-                alert("Du bist jetzt im Offline-Modus.");
-            } catch(e) {
-                alert("Fehler beim Trennen: " + e.message);
-            }
+                alert("You are now in Offline Mode.");
+            } catch(e) { alert("Error disconnecting: " + e.message); }
             setLoading('local', false);
         };
 
