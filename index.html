@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Sync - Critical Functionality Testbed</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Import Module -->
+    <script type="module" src="./storage.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 p-8 font-mono">
+
+    <div class="max-w-2xl mx-auto space-y-8">
+        
+        <header class="border-b border-slate-700 pb-4">
+            <h1 class="text-2xl font-bold text-teal-400">Step 85: Cloud ID Validation Testbed</h1>
+            <p class="text-sm text-slate-400 mt-2">Isolierte Umgebung zur Härtung der User-ID Generierung.</p>
+        </header>
+
+        <!-- Control Panel -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                <i data-lucide="settings" class="w-5 h-5 text-indigo-400"></i> Controls
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="btn-init-test" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-blue-900/50 flex items-center justify-center gap-2">
+                    <i data-lucide="play" class="w-4 h-4"></i> Start Critical Path
+                </button>
+
+                <button id="btn-reset-local" class="bg-red-900/50 hover:bg-red-800/50 text-red-200 border border-red-800 font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                    <i data-lucide="trash" class="w-4 h-4"></i> Reset Local State
+                </button>
+            </div>
+        </div>
+
+        <!-- Diagnostic Display -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-teal-500" id="status-bar"></div>
+            
+            <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                <i data-lucide="activity" class="w-5 h-5 text-teal-400"></i> System State
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Auth Status -->
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <span class="text-slate-400 text-sm uppercase font-bold tracking-wider">Firebase Auth</span>
+                    <span id="disp-auth" class="font-mono text-yellow-500">Waiting...</span>
+                </div>
+
+                <!-- UID Status -->
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+                    <span class="text-slate-400 text-sm uppercase font-bold tracking-wider">Internal UID</span>
+                    <span id="disp-uid" class="font-mono text-slate-500 text-xs">---</span>
+                </div>
+
+                <!-- Critical ID Status -->
+                <div class="flex justify-between items-center bg-indigo-900/20 p-4 rounded-lg border border-indigo-500/30">
+                    <div class="flex flex-col">
+                        <span class="text-indigo-300 text-xs uppercase font-bold tracking-widest mb-1">Public Cloud ID</span>
+                        <span class="text-[10px] text-indigo-400/60">Must exist for sync</span>
+                    </div>
+                    <div class="text-right">
+                        <span id="disp-short-id" class="block font-mono text-2xl font-black text-slate-600">??????</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Output -->
+        <div class="bg-black p-4 rounded-xl border border-slate-800 font-mono text-xs h-64 overflow-y-auto custom-scrollbar" id="console-log">
+            <div class="text-slate-500 italic">System ready. Waiting for input...</div>
+        </div>
+
+    </div>
+
+    <script>
+        // Logger Helper
+        const logArea = document.getElementById('console-log');
+        function log(msg, type = 'info') {
+            const el = document.createElement('div');
+            const ts = new Date().toISOString().split('T')[1].split('.')[0];
+            
+            let color = 'text-slate-300';
+            if(type === 'error') color = 'text-red-400 font-bold';
+            if(type === 'success') color = 'text-green-400 font-bold';
+            if(type === 'warn') color = 'text-orange-300';
+
+            el.className = `mb-1 ${color}`;
+            el.innerHTML = `<span class="opacity-50">[${ts}]</span> ${msg}`;
+            logArea.appendChild(el);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // Wait for modules to load
+        setTimeout(() => {
+            if(window.lucide) lucide.createIcons();
+            
+            // Check Module Availability
+            if(window.VTrainerCloud) {
+                log("Module 'storage.js' loaded successfully.", 'success');
+            } else {
+                log("CRITICAL ERROR: 'storage.js' not loaded.", 'error');
+            }
+        }, 500);
+
+        // --- Logic ---
+        
+        document.getElementById('btn-reset-local').onclick = () => {
+            if(confirm("Lösche lokalen Speicher für 'vtrainer_modular_v1'?")) {
+                localStorage.removeItem('vtrainer_modular_v1');
+                log("Local storage wiped. Please reload or start test.", 'warn');
+                document.getElementById('disp-short-id').textContent = "??????";
+                document.getElementById('disp-short-id').className = "block font-mono text-2xl font-black text-slate-600";
+            }
+        };
+
+        document.getElementById('btn-init-test').onclick = async () => {
+            const btn = document.getElementById('btn-init-test');
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            
+            try {
+                log("=== STARTING CRITICAL PATH TEST ===");
+                
+                // 1. Load Local State
+                log("Loading local state...");
+                const state = window.VTrainer.loadState();
+                
+                // 2. Auth
+                log("Initializing Firebase Auth...");
+                await window.VTrainerCloud.initAuth();
+                
+                const uid = window.VTrainerCloud.getUID();
+                if(!uid) throw new Error("Auth returned no UID.");
+                
+                document.getElementById('disp-auth').textContent = "AUTHENTICATED";
+                document.getElementById('disp-auth').className = "font-mono text-green-400 font-bold";
+                document.getElementById('disp-uid').textContent = uid;
+                log("Auth Success. UID: " + uid.substring(0,8) + "...", 'success');
+
+                // 3. CRITICAL: ID Generation
+                log("Attempting to retrieve or generate Cloud ID...");
+                
+                // Force check even if state exists, to verify robustness
+                const shortId = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
+                
+                // 4. Verification
+                if(shortId && typeof shortId === 'string' && shortId.length === 6) {
+                    document.getElementById('disp-short-id').textContent = shortId;
+                    document.getElementById('disp-short-id').className = "block font-mono text-2xl font-black text-indigo-400";
+                    document.getElementById('status-bar').className = "absolute top-0 left-0 w-1 h-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]";
+                    
+                    log(`SUCCESS: Valid Cloud ID confirmed: [${shortId}]`, 'success');
+                    log("State has been updated and persisted.", 'info');
+                } else {
+                    throw new Error("Invalid ID returned: " + shortId);
+                }
+
+            } catch(e) {
+                log("CRITICAL FAILURE: " + e.message, 'error');
+                console.error(e);
+                document.getElementById('status-bar').className = "absolute top-0 left-0 w-1 h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]";
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                log("=== TEST END ===");
+            }
+        };
+
+    </script>
+</body>
+</html>
