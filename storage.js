@@ -1,6 +1,6 @@
-// [HISTORY START: STEP 89] [2026-01-02]
-// CHANGE: Datenschutz-Feature: Löschen von Cloud-Daten bei Modus-Wechsel
-// STATUS: LIVE (Hybrid Mode + Privacy)
+// [HISTORY START: STEP 91] [2026-01-02]
+// CHANGE: Apple Authentication hinzugefügt
+// STATUS: LIVE CANDIDATE
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -8,7 +8,8 @@ import {
     getAuth, 
     signInAnonymously, 
     signInWithPopup, 
-    GoogleAuthProvider, 
+    GoogleAuthProvider,
+    OAuthProvider, // Neu für Apple
     linkWithPopup,
     signOut,
     onAuthStateChanged 
@@ -17,7 +18,7 @@ import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstati
 
 const STORAGE_KEY = 'vtrainer_modular_v1';
 
-// --- LIVE KONFIGURATION ---
+// --- LIVE KONFIGURATION (vovab-16a93) ---
 const firebaseConfig = {
   apiKey: "AIzaSyCORFqlBS6sIsXZ8a8U2mVvES7LG41OOV8",
   authDomain: "vovab-16a93.firebaseapp.com",
@@ -31,9 +32,14 @@ const appId = 'vovab-live';
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
 
-// Standard State
+// Provider Setup
+const googleProvider = new GoogleAuthProvider();
+const appleProvider = new OAuthProvider('apple.com');
+appleProvider.addScope('email');
+appleProvider.addScope('name');
+
+// Standard State Definition
 const DEFAULT_STATE = {
     customPack: [], 
     stats: {xp:0, streak:0, totalMastered:0, lastLearningDate: null, sessionsCompleted: 0}, 
@@ -42,7 +48,7 @@ const DEFAULT_STATE = {
         volume:1, ttsRate:1, sessionSize:15, lastLevel: null, enableAudioMatch: true, enableWrittenReview: true,
         bgHue: 0, bgBrightness: 100, creatorsMode: false,
         isCloudEnabled: false, 
-        authMethod: 'local',
+        authMethod: 'local', // 'local', 'anonymous', 'google', 'apple'
         cloudShortId: null
     } 
 };
@@ -51,12 +57,18 @@ const DEFAULT_STATE = {
 
 export async function initAuth() {
     return new Promise((resolve) => {
-        onAuthStateChanged(auth, (user) => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            unsubscribe(); 
             resolve(user);
         });
     });
 }
 
+export function getCurrentUser() {
+    return auth.currentUser;
+}
+
+// 1. ANONYM
 export async function loginAnonymous() {
     try {
         const result = await signInAnonymously(auth);
@@ -67,6 +79,7 @@ export async function loginAnonymous() {
     }
 }
 
+// 2. GOOGLE
 export async function loginGoogle() {
     try {
         const result = await signInWithPopup(auth, googleProvider);
@@ -87,6 +100,27 @@ export async function upgradeToGoogle() {
     }
 }
 
+// 3. APPLE (Neu)
+export async function loginApple() {
+    try {
+        const result = await signInWithPopup(auth, appleProvider);
+        return result.user;
+    } catch (e) {
+        console.error("Apple Auth Error:", e);
+        throw e;
+    }
+}
+
+export async function upgradeToApple() {
+    if (!auth.currentUser) throw new Error("Kein User eingeloggt.");
+    try {
+        const result = await linkWithPopup(auth.currentUser, appleProvider);
+        return result.user;
+    } catch (e) {
+        throw e;
+    }
+}
+
 export async function logout() {
     await signOut(auth);
 }
@@ -94,25 +128,20 @@ export async function logout() {
 // --- DATA PRIVACY / DELETION ---
 export async function deleteCompleteUserData(uid, shortId) {
     if (!uid) return;
-    
     try {
-        // 1. Lösche Benutzerdaten (State)
+        console.log(`Lösche Daten für UID: ${uid}...`);
         const stateDoc = doc(db, 'artifacts', appId, 'users', uid, 'data', 'state');
         await deleteDoc(stateDoc);
         
-        // 2. Lösche Short-ID Verknüpfung (falls vorhanden)
         if (shortId) {
+            console.log(`Lösche Alias: ${shortId}...`);
             const aliasRef = doc(db, 'artifacts', appId, 'public', 'data', 'aliases', shortId);
             await deleteDoc(aliasRef);
         }
-        
-        // 3. Optional: User Account selbst löschen (Vorsicht: erfordert Re-Auth oft)
-        // await auth.currentUser.delete(); 
-        
         console.log("Benutzerdaten erfolgreich gelöscht.");
     } catch (e) {
         console.error("Löschen fehlgeschlagen:", e);
-        throw e;
+        throw e; 
     }
 }
 
@@ -120,7 +149,6 @@ export async function deleteCompleteUserData(uid, shortId) {
 
 export async function checkForCloudConflict(uid, localState) {
     if (!uid) return null;
-    
     try {
         const cloudData = await fetchFromCloud(uid);
         if (!cloudData) return null; 
@@ -164,6 +192,10 @@ export async function getOrRegisterShortId(uid, currentState) {
         const newId = generateRandomId();
         try {
             const aliasRef = doc(db, 'artifacts', appId, 'public', 'data', 'aliases', newId);
+            const snap = await getDoc(aliasRef);
+            if(snap.exists()) {
+                throw new Error("ID collision");
+            }
             await setDoc(aliasRef, { uid: uid, created: Date.now() });
             
             currentState.settings.cloudShortId = newId;
@@ -226,7 +258,6 @@ export function loadState(){
     try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
-        
         const loaded = JSON.parse(raw);
         const freshState = JSON.parse(JSON.stringify(DEFAULT_STATE));
         
@@ -240,7 +271,6 @@ export function loadState(){
         Object.assign(freshState, loaded);
         if(loaded.stats) Object.assign(freshState.stats, loaded.stats);
         if(loaded.settings) Object.assign(freshState.settings, loaded.settings);
-        
         return freshState;
     }catch(e){ 
         console.error("State load error, resetting:", e);
@@ -253,13 +283,11 @@ export function saveState(currentState){
     if(currentState.words) delete currentState.words;
     
     currentState.lastSync = Date.now();
-    
     localStorage.setItem(STORAGE_KEY, JSON.stringify(currentState)); 
     
     if (currentState.settings.isCloudEnabled === true) {
         syncToCloud(currentState).catch(e => console.warn("Background sync error:", e));
     }
-    
     window.dispatchEvent(new CustomEvent('stateUpdated', { detail: currentState }));
 }
 
@@ -274,20 +302,23 @@ export function checkStreakValidity(currentState){
     }
 }
 
+// Global Exports
 window.VTrainerCloud = {
     initAuth,
     loginAnonymous,
     loginGoogle,
     upgradeToGoogle,
+    loginApple,     // Neu
+    upgradeToApple, // Neu
     logout,
     fetch: fetchFromCloud,
     sync: syncToCloud,
     getUID: () => auth.currentUser?.uid,
-    getUser: () => auth.currentUser,
+    getUser: getCurrentUser,
     getOrRegisterShortId,
     resolveShortId,
     checkForCloudConflict,
-    deleteCompleteUserData // Neue Funktion exportieren
+    deleteCompleteUserData
 };
 
 window.VTrainer = { loadState, saveState, checkStreakValidity, getWordKey };
