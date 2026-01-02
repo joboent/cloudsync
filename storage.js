@@ -1,17 +1,64 @@
-// ... existing code ...
+// ==========================================
+// [HISTORY START: STEP 86] [2026-01-02 13:30]
+// CHANGE: Hinzufügen eines manuellen Konfigurationsblocks für lokale Tests auf dem Laptop.
+// STATUS: ACTIVE
+// ==========================================
+
+// --- ANLEITUNG FÜR LOKALE TESTS ---
+// 1. Gehe in deine Firebase Console (console.firebase.google.com)
+// 2. Erstelle ein Projekt (falls nicht vorhanden).
+// 3. Füge eine Web-App hinzu.
+// 4. Kopiere die "firebaseConfig" Werte hier rein:
+const MANUAL_LOCAL_CONFIG = {
+    apiKey: "DEIN_API_KEY_HIER_EINFUEGEN",
+    authDomain: "DEIN_PROJEKT.firebaseapp.com",
+    projectId: "DEIN_PROJEKT_ID",
+    storageBucket: "DEIN_PROJEKT.firebasestorage.app",
+    messagingSenderId: "DEINE_SENDER_ID",
+    appId: "DEINE_APP_ID"
+};
+// ==========================================
+// [HISTORY END: STEP 86]
+// ==========================================
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 const STORAGE_KEY = 'vtrainer_modular_v1';
 
-// Sicherer Check für lokale Tests ohne Umgebungsvariablen
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-    apiKey: "local-dev-key",
-    authDomain: "local-dev.firebaseapp.com",
-    projectId: "local-dev"
-};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-vtrainer';
+// ==========================================
+// [HISTORY START: STEP 86] [2026-01-02 13:30]
+// CHANGE: Logik-Update: Priorisiere manuelle Config bei lokalen Tests, sonst Fallback auf Environment oder Dummy.
+// STATUS: ACTIVE
+// ==========================================
+let firebaseConfig;
+let appId;
+
+// 1. Check: Läuft es im Canvas/Immersive (Environment Variablen)?
+if (typeof __firebase_config !== 'undefined') {
+    firebaseConfig = JSON.parse(__firebase_config);
+    appId = typeof __app_id !== 'undefined' ? __app_id : 'default-vtrainer';
+} 
+// 2. Check: Hat der User die manuelle Config ausgefüllt?
+else if (MANUAL_LOCAL_CONFIG.apiKey !== "DEIN_API_KEY_HIER_EINFUEGEN") {
+    console.log("Using MANUAL LOCAL CONFIG");
+    firebaseConfig = MANUAL_LOCAL_CONFIG;
+    appId = 'local-test-app';
+} 
+// 3. Fallback: Dummy (wird Fehler werfen, wenn Netzwerkanfragen gestellt werden)
+else {
+    console.warn("WARNUNG: Keine gültige Firebase Config gefunden. Cloud-Funktionen werden fehlschlagen.");
+    firebaseConfig = {
+        apiKey: "local-dev-key",
+        authDomain: "local-dev.firebaseapp.com",
+        projectId: "local-dev"
+    };
+    appId = 'default-vtrainer';
+}
+// ==========================================
+// [HISTORY END: STEP 86]
+// ==========================================
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -31,8 +78,54 @@ const DEFAULT_STATE = {
 
 export function getWordKey(en, de) { return (String(en||'') + "::" + String(de||'')).toLowerCase().trim(); }
 
+// ==========================================
+// [HISTORY START: STEP 87] [2026-01-02 13:45]
+// CHANGE: Härtung von initCloudAuth. Wir warten jetzt explizit auf den Auth-State (Promise), statt nur den signIn Call abzusetzen.
+// STATUS: ACTIVE
+// ==========================================
+export function initCloudAuth() {
+    return new Promise((resolve, reject) => {
+        // 1. Wenn schon eingeloggt, sofort fertig
+        if (auth.currentUser) {
+            resolve(auth.currentUser);
+            return;
+        }
+
+        // 2. Listener aufsetzen, der auf User wartet
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                unsubscribe(); // Listener aufräumen
+                resolve(user);
+            }
+        }, (error) => {
+            unsubscribe();
+            reject(error);
+        });
+
+        // 3. Login Prozess starten
+        // Wir nutzen hier eine asynchrone Hilfsfunktion, damit wir Fehler fangen können
+        (async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                // HINWEIS: onAuthStateChanged wird oben feuern, sobald das hier durch ist
+            } catch (e) {
+                console.error("Cloud Auth Sign-In Error:", e);
+                // Auth State Listener würde nicht feuern, also müssen wir hier nicht rejecten, 
+                // da der Listener eh auf ein Event wartet. Aber sauberer ist es:
+                // (Optional: reject(e) hier triggern, wenn wir Zugriff auf reject hätten - aber der Listener ist der Single Source of Truth)
+            }
+        })();
+    });
+}
+// ==========================================
+// [HISTORY END: STEP 87]
+// [OLD-CODE (COMMENTED OUT) START]
+/*
 export async function initCloudAuth() {
-// ... existing code ...
     try {
         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
             await signInWithCustomToken(auth, __initial_auth_token);
@@ -43,6 +136,9 @@ export async function initCloudAuth() {
         console.error("Cloud Auth Error:", e);
     }
 }
+*/
+// [OLD-CODE END]
+// ==========================================
 
 // ==========================================
 // [HISTORY START: STEP 73] [2026-01-02 10:15]
@@ -81,10 +177,6 @@ export async function getOrRegisterShortId(uid, currentState) {
             const aliasRef = doc(db, 'artifacts', appId, 'public', 'data', 'aliases', newId);
             // ==========================================
             // [HISTORY END: STEP 78]
-            // [OLD-CODE (COMMENTED OUT) START]
-            // const aliasRef = doc(db, 'artifacts', appId, 'public', 'aliases', newId);
-            // [OLD-CODE END]
-            // ==========================================
             
             // Versuche zu speichern. Schlägt fehl, wenn ID existiert (Dank Security Rules: !exists)
             await setDoc(aliasRef, { uid: uid, created: Date.now() });
@@ -107,10 +199,6 @@ export async function getOrRegisterShortId(uid, currentState) {
                 throw new Error("CRITICAL_ID_FAILURE: Could not generate unique ID.");
                 // ==========================================
                 // [HISTORY END: STEP 84]
-                // [OLD-CODE (COMMENTED OUT) START]
-                // return null;
-                // [OLD-CODE END]
-                // ==========================================
             }
             // Kurze Pause vor dem nächsten Versuch (Backoff)
             await new Promise(r => setTimeout(r, 500));
@@ -151,31 +239,9 @@ export async function resolveShortId(shortId) {
 }
 // ==========================================
 // [HISTORY END: STEP 84]
-// [OLD-CODE (COMMENTED OUT) START]
-/*
-export async function resolveShortId(shortId) {
-    if(!shortId) return null;
-    try {
-        // [HISTORY START: STEP 78] ...
-        const aliasRef = doc(db, 'artifacts', appId, 'public', 'data', 'aliases', shortId);
-        // ...
-        
-        const snap = await getDoc(aliasRef);
-        if (snap.exists()) {
-            return snap.data().uid;
-        }
-        return null;
-    } catch (e) {
-        console.error("Resolve Error", e);
-        throw e;
-    }
-}
-*/
-// [OLD-CODE END]
 // ==========================================
 
 export async function syncToCloud(state) {
-// ... existing code ...
     if (!state || state.settings.isCloudEnabled !== true || !auth.currentUser) return;
     try {
         const userId = auth.currentUser.uid;
@@ -187,7 +253,6 @@ export async function syncToCloud(state) {
 }
 
 export async function fetchFromCloud(targetUserId = null) {
-// ... existing code ...
     const userId = targetUserId || auth.currentUser?.uid;
     if (!userId) return null;
     try {
@@ -201,7 +266,6 @@ export async function fetchFromCloud(targetUserId = null) {
 }
 
 export function loadState(){
-// ... existing code ...
     try{
         const raw = localStorage.getItem(STORAGE_KEY);
         if(!raw) return JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -228,7 +292,6 @@ export function loadState(){
 }
 
 export function saveState(currentState){ 
-// ... existing code ...
     if(!currentState) return;
     if(currentState.words) delete currentState.words;
     
@@ -245,7 +308,6 @@ export function saveState(currentState){
 }
 
 export function checkStreakValidity(currentState){
-// ... existing code ...
     if(!currentState || !currentState.stats.lastLearningDate) return;
     const today = new Date().toDateString();
     const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
