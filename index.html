@@ -2,233 +2,212 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy & Auth Test</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>Cloud Portal (Mobile Optimized)</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script type="module" src="./storage.js"></script>
-</head>
-<body class="bg-slate-900 text-slate-100 p-6 font-mono">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Original CSS (als Fallback) -->
+    <link rel="stylesheet" href="styles.css">
 
-    <div class="max-w-3xl mx-auto space-y-6">
+    <style>
+        /* --- DEINE FARBEN (Direkt integriert) --- */
         
-        <header class="border-b border-slate-700 pb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-2xl font-bold text-teal-400">Step 89: Privacy & Deletion</h1>
-                <p class="text-xs text-slate-400">Testet Löschung von Cloud-Daten bei Modus-Wechsel.</p>
-            </div>
-            <div id="auth-badge" class="px-3 py-1 rounded bg-slate-800 text-slate-400 text-xs font-bold">
-                Checking Auth...
-            </div>
-        </header>
+        @keyframes livingGradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-        <!-- 1. AUTH MODE SELECTION -->
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
-            <h2 class="text-sm font-bold text-slate-400 uppercase mb-4 flex gap-2">
-                <i data-lucide="shield" class="w-4 h-4"></i> Datensicherheit & Login
-            </h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Lokal -->
-                <button id="btn-mode-local" class="p-4 rounded-lg border border-slate-600 hover:bg-slate-700 transition text-left group">
-                    <div class="text-slate-300 font-bold group-hover:text-white flex items-center gap-2">
-                        <i data-lucide="hard-drive" class="w-4 h-4"></i> Nur Lokal
-                    </div>
-                    <div class="text-[10px] text-slate-500 mt-1">Trennt Verbindung. Fragt nach Cloud-Löschung.</div>
-                </button>
+        .living-gradient-bg {
+            /* Dein originaler Pastell-Mix aus styles.css */
+            background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #fbc2eb, #a18cd1, #a6c0fe, #ff9a9e);
+            background-size: 400% 400%;
+            animation: livingGradientShift 60s ease infinite;
+        }
 
-                <!-- Anonym -->
-                <button id="btn-mode-anon" class="p-4 rounded-lg border border-indigo-600/50 bg-indigo-900/10 hover:bg-indigo-900/30 transition text-left group">
-                    <div class="text-indigo-300 font-bold group-hover:text-indigo-200 flex items-center gap-2">
-                        <i data-lucide="ghost" class="w-4 h-4"></i> Anonym
-                    </div>
-                    <div class="text-[10px] text-indigo-400/60 mt-1">Sync via Code. Temporärer Speicher.</div>
-                </button>
+        /* --- Mobile-First UI Styles --- */
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            overscroll-behavior-y: none;
+            color: #1e293b; /* Slate-800 default text */
+        }
 
-                <!-- Google -->
-                <button id="btn-mode-google" class="p-4 rounded-lg border border-blue-600/50 bg-blue-900/10 hover:bg-blue-900/30 transition text-left group">
-                    <div class="text-blue-300 font-bold group-hover:text-blue-200 flex items-center gap-2">
-                        <i data-lucide="mail" class="w-4 h-4"></i> Google
-                    </div>
-                    <div class="text-[10px] text-blue-400/60 mt-1">Dauerhaft & Sicher.</div>
-                </button>
-            </div>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 20px 40px -5px rgba(0, 0, 0, 0.15), 
+                inset 0 0 30px rgba(255, 255, 255, 0.3);
+        }
 
-            <!-- Current ID Display -->
-            <div class="mt-4 p-3 bg-black/30 rounded border border-slate-700/50 flex justify-between items-center">
-                <div class="text-xs">
-                    <span class="text-slate-500">Aktuelle UID:</span>
-                    <span id="disp-uid" class="text-slate-300 ml-2 font-mono">---</span>
-                </div>
-                <div class="text-xs">
-                    <span class="text-slate-500">Short ID:</span>
-                    <span id="disp-short-id" class="text-indigo-400 ml-2 font-black">---</span>
-                </div>
-            </div>
-        </div>
+        .auth-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        <!-- Log Output -->
-        <div class="bg-black p-4 rounded-xl border border-slate-800 font-mono text-xs h-48 overflow-y-auto custom-scrollbar" id="console-log">
-            <div class="text-slate-500 italic">System ready...</div>
-        </div>
+        .auth-card:active {
+            transform: scale(0.96); 
+        }
 
+        /* Apple Button Spezial */
+        .auth-card.apple {
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .auth-card.apple:active {
+            background: #000;
+        }
+        .auth-card.apple .text-slate-500 { color: rgba(255,255,255,0.6); }
+
+        /* Status Badge Animation */
+        @keyframes border-pulse {
+            0% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .status-active {
+            animation: border-pulse 2s infinite;
+            background: rgba(240, 253, 244, 0.95) !important;
+        }
+
+        /* Anpassung für kleine Bildschirme */
+        @media (max-height: 700px) {
+            .compact-hide { display: none; }
+            .card-height { height: 5rem !important; }
+            .card-padding { padding: 1rem !important; }
+        }
+
+        /* Notches */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+
+    </style>
+</head>
+
+<!-- Body nutzt jetzt garantiert die Klasse .living-gradient-bg -->
+<body class="living-gradient-bg w-full min-h-[100dvh] flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto overflow-x-hidden supports-[min-height:100dvh]:min-h-[100dvh]">
+
+    <!-- 3D Mockup Background (dezent) -->
+    <div class="fixed inset-0 pointer-events-none opacity-20 flex items-center justify-center overflow-hidden">
+        <div class="w-[80vw] h-[80vw] border-[3px] border-white/20 rounded-[3rem] transform -rotate-12 absolute -top-20 -left-20"></div>
+        <div class="w-[60vw] h-[60vw] border-[3px] border-white/20 rounded-full absolute -bottom-10 -right-10"></div>
     </div>
 
-    <script>
-        const logArea = document.getElementById('console-log');
-        function log(msg, type = 'info') {
-            const el = document.createElement('div');
-            const ts = new Date().toISOString().split('T')[1].split('.')[0];
-            let color = 'text-slate-300';
-            if(type === 'error') color = 'text-red-400 font-bold';
-            if(type === 'success') color = 'text-green-400 font-bold';
-            if(type === 'warn') color = 'text-orange-300 font-bold';
-            el.className = `mb-1 ${color}`;
-            el.innerHTML = `<span class="opacity-50">[${ts}]</span> ${msg}`;
-            logArea.appendChild(el);
-            logArea.scrollTop = logArea.scrollHeight;
-        }
-
-        function updateAuthUI(user) {
-            const badge = document.getElementById('auth-badge');
-            const uidDisp = document.getElementById('disp-uid');
+    <!-- MAIN CONTAINER -->
+    <div class="glass-panel w-full max-w-md p-6 relative z-10 animate-pop my-auto shadow-2xl">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-white/60 rounded-xl shadow-sm backdrop-blur-md">
+                    <i data-lucide="cloud" class="w-6 h-6 text-indigo-600"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-800 tracking-tight leading-none">Cloud Sync</h1>
+                    <p class="text-xs font-bold text-slate-500/80 mt-1">Speicherort wählen</p>
+                </div>
+            </div>
             
-            if (user) {
-                const isAnon = user.isAnonymous; 
-                badge.textContent = isAnon ? "Angemeldet (Anonym)" : "Angemeldet (Google)";
-                badge.className = isAnon ? "px-3 py-1 rounded bg-indigo-900 text-indigo-200 text-xs font-bold" : "px-3 py-1 rounded bg-blue-900 text-blue-200 text-xs font-bold";
-                uidDisp.textContent = user.uid;
-            } else {
-                badge.textContent = "Lokal (Nicht angemeldet)";
-                badge.className = "px-3 py-1 rounded bg-slate-700 text-slate-400 text-xs font-bold";
-                uidDisp.textContent = "---";
-            }
-        }
+            <button class="p-2 -mr-2 text-slate-400 hover:text-slate-700 active:scale-90 transition rounded-full">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
 
-        async function refreshShortID(state) {
-            const uid = window.VTrainerCloud.getUID();
-            const disp = document.getElementById('disp-short-id');
-            if(state.settings.cloudShortId) {
-                disp.textContent = state.settings.cloudShortId;
-            } else if (uid) {
-                const id = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
-                disp.textContent = id || "(Generiere...)";
-            } else {
-                disp.textContent = "---";
-            }
-        }
+        <!-- Grid -->
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
-        setTimeout(async () => {
-            if(window.lucide) lucide.createIcons();
-            window.VTrainerCloud.initAuth().then(user => {
-                updateAuthUI(user);
-                const state = window.VTrainer.loadState();
-                refreshShortID(state);
-            });
-        }, 500);
+            <!-- 1. APPLE -->
+            <div class="auth-card apple p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between shadow-lg shadow-black/10">
+                <div class="flex items-center gap-3 sm:w-full sm:justify-between">
+                    <div class="p-1.5 bg-white/20 rounded-lg">
+                        <svg class="w-5 h-5 text-white fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 1.95.29 2.94.92-.06.04 1.6 1.05 1.54 3.31-.02 2.27-1.39 3.53-1.91 4.31-.95 1.44-2.16 2.97-3.34 4.62zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.16 2.29-1.6 4.28-3.74 4.25z"/></svg>
+                    </div>
+                    <span class="sm:hidden font-bold text-base">Apple Sign-In</span>
+                </div>
+                <div class="hidden sm:block">
+                    <h3 class="font-bold text-lg mb-0.5">Apple</h3>
+                    <p class="text-xs text-slate-400 font-medium">Empfohlen für iOS</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 opacity-50 sm:hidden"></i>
+            </div>
 
-        // --- BUTTON HANDLERS ---
+            <!-- 2. GOOGLE -->
+            <div class="auth-card google p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between">
+                <div class="flex items-center gap-3 sm:w-full sm:justify-between">
+                    <div class="p-1.5 bg-white rounded-lg shadow-sm">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    </div>
+                    <span class="sm:hidden font-bold text-slate-700 text-base">Google Account</span>
+                </div>
+                <div class="hidden sm:block">
+                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Google</h3>
+                    <p class="text-xs text-slate-500 font-medium">Dauerhafter Speicher</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 sm:hidden"></i>
+            </div>
 
-        // 1. LOCAL MODE (MIT DATENSCHUTZ-ABFRAGE)
-        document.getElementById('btn-mode-local').onclick = async () => {
-            const currentUser = window.VTrainerCloud.getUser();
-            const state = window.VTrainer.loadState();
+            <!-- 3. ANONYM -->
+            <div class="auth-card anon p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between">
+                <div class="flex items-center gap-3 sm:w-full sm:justify-between">
+                    <div class="p-1.5 bg-indigo-100 rounded-lg text-indigo-600">
+                        <i data-lucide="ghost" class="w-5 h-5"></i>
+                    </div>
+                    <span class="sm:hidden font-bold text-slate-700 text-base">Anonym Starten</span>
+                </div>
+                <div class="hidden sm:block">
+                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Anonym</h3>
+                    <p class="text-xs text-slate-500 font-medium">Sync via Code</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 sm:hidden"></i>
+            </div>
 
-            if (!currentUser && !state.settings.isCloudEnabled) {
-                log("Bereits im lokalen Modus.", 'info');
-                return;
-            }
+            <!-- 4. LOKAL -->
+            <div class="auth-card p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between border-slate-300 bg-slate-50/50">
+                <div class="flex items-center gap-3 sm:w-full sm:justify-between">
+                    <div class="p-1.5 bg-slate-200 rounded-lg text-slate-600">
+                        <i data-lucide="hard-drive" class="w-5 h-5"></i>
+                    </div>
+                    <div class="sm:hidden flex flex-col">
+                        <span class="font-bold text-slate-600 text-base">Nur Lokal</span>
+                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Kein Sync</span>
+                    </div>
+                </div>
+                <div class="hidden sm:block">
+                    <h3 class="font-bold text-lg text-slate-600 mb-0.5">Lokal</h3>
+                    <p class="text-xs text-slate-400 font-medium">Offline Modus</p>
+                </div>
+            </div>
 
-            // A) Bestätigung für Wechsel
-            if (!confirm("Verbindung zur Cloud trennen und in den lokalen Modus wechseln?")) {
-                return;
-            }
+        </div>
 
-            // B) Datenschutz-Abfrage
-            let deleteCloud = false;
-            if (currentUser) {
-                deleteCloud = confirm(
-                    "DATENSCHUTZ:\n\n" +
-                    "Möchtest du deine Daten in der Cloud (inkl. Lernfortschritt) endgültig löschen?\n\n" +
-                    "OK = Ja, löschen (Account wird bereinigt)\n" +
-                    "Abbrechen = Nein, Daten behalten (für späteres Login)"
-                );
-            }
-
-            log("Führe Modus-Wechsel aus...", 'warn');
-
-            try {
-                if (deleteCloud && currentUser) {
-                    log("Lösche Cloud-Daten...", 'warn');
-                    await window.VTrainerCloud.deleteCompleteUserData(currentUser.uid, state.settings.cloudShortId);
-                    log("Daten gelöscht.", 'success');
-                }
-
-                // C) Logout & State Reset
-                await window.VTrainerCloud.logout();
-                
-                state.settings.isCloudEnabled = false;
-                state.settings.authMethod = 'local';
-                state.settings.cloudShortId = null; // Short ID lokal vergessen
-                window.VTrainer.saveState(state);
-
-                updateAuthUI(null);
-                refreshShortID(state);
-                log("Erfolgreich auf 'Nur Lokal' gewechselt.", 'success');
-                alert("Du bist jetzt im lokalen Modus.");
-
-            } catch(e) {
-                log("Fehler beim Wechsel: " + e.message, 'error');
-            }
-        };
-
-        // 2. ANONYMOUS
-        document.getElementById('btn-mode-anon').onclick = async () => {
-            log("Starte Anonyme Anmeldung...");
-            try {
-                const user = await window.VTrainerCloud.loginAnonymous();
-                const state = window.VTrainer.loadState();
-                state.settings.isCloudEnabled = true;
-                state.settings.authMethod = 'anonymous';
-                const id = await window.VTrainerCloud.getOrRegisterShortId(user.uid, state);
-                window.VTrainer.saveState(state);
-                log(`Anonym eingeloggt. ID: ${id}`, 'success');
-                updateAuthUI(user);
-                refreshShortID(state);
-            } catch(e) { log("Fehler: " + e.message, 'error'); }
-        };
-
-        // 3. GOOGLE
-        document.getElementById('btn-mode-google').onclick = async () => {
-            const currentUser = window.VTrainerCloud.getUser();
-            if (currentUser && currentUser.isAnonymous) {
-                if(confirm("Anonymen Account in Google Account umwandeln?")) {
-                    try {
-                        const user = await window.VTrainerCloud.upgradeToGoogle();
-                        log("Upgrade erfolgreich!", 'success');
-                        const state = window.VTrainer.loadState();
-                        state.settings.authMethod = 'google';
-                        window.VTrainer.saveState(state);
-                        updateAuthUI(user);
-                        return;
-                    } catch(e) { 
-                        log("Upgrade Fehler: " + e.message, 'error');
-                        if(e.code === 'auth/credential-already-in-use') alert("Google Account wird schon verwendet.");
-                        return;
-                    }
-                }
-            }
-            try {
-                const user = await window.VTrainerCloud.loginGoogle();
-                const state = window.VTrainer.loadState();
-                state.settings.isCloudEnabled = true;
-                state.settings.authMethod = 'google';
-                window.VTrainer.saveState(state);
-                log("Google Login erfolgreich.", 'success');
-                updateAuthUI(user);
-                refreshShortID(state);
-            } catch(e) { log("Google Login Fehler: " + e.message, 'error'); }
-        };
+        <!-- Footer -->
+        <div class="mt-6 pt-4 border-t border-slate-200/50 flex flex-col items-center gap-2 text-center">
+            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold bg-white/30 px-3 py-1 rounded-full">
+                <i data-lucide="shield-check" class="w-3 h-3 text-green-600"></i>
+                <span>SSL Verschlüsselt & DSGVO Konform</span>
+            </div>
+            <div class="text-[10px] text-slate-400 mt-1 pb-safe">
+                Safe Area Protected • v9.5 Mobile Core
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        lucide.createIcons();
     </script>
 </body>
 </html>
