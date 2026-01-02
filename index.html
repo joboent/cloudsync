@@ -100,6 +100,16 @@
         .card-loader.visible { opacity: 1; pointer-events: auto; }
         .auth-card.apple .card-loader { background: rgba(0,0,0,0.8); }
 
+        /* --- CUSTOM MODAL STYLES --- */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        .modal-active {
+            opacity: 1;
+            transform: scale(1);
+        }
+
     </style>
 </head>
 
@@ -111,7 +121,7 @@
         <div class="w-[60vw] h-[60vw] border-[3px] border-white/20 rounded-full absolute -bottom-10 -right-10"></div>
     </div>
 
-    <!-- MAIN CONTAINER -->
+    <!-- MAIN UI CONTAINER -->
     <div class="glass-panel w-full max-w-md p-6 relative z-10 animate-pop my-auto shadow-2xl">
         
         <!-- Header -->
@@ -236,7 +246,25 @@
                 <span>Encrypted & GDPR Compliant</span>
             </div>
             <div class="text-[10px] text-slate-400 mt-1 pb-safe">
-                Safe Area Protected • v9.6 ID-Sync
+                Safe Area Protected • v9.7 UI-Polish
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM MODAL COMPONENT -->
+    <div id="ui-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="glass-panel w-[90%] max-w-sm p-6 transform scale-95 transition-transform duration-300 shadow-2xl flex flex-col items-center text-center">
+            <!-- Dynamic Icon -->
+            <div id="modal-icon-bg" class="mb-4 p-3 rounded-full bg-indigo-100 text-indigo-600">
+                <i id="modal-icon" data-lucide="info" class="w-6 h-6"></i>
+            </div>
+            
+            <h3 id="modal-title" class="text-lg font-black text-slate-800 mb-2">Title</h3>
+            <p id="modal-msg" class="text-sm text-slate-600 mb-6 leading-relaxed">Message goes here...</p>
+            
+            <div class="flex gap-3 w-full">
+                <button id="modal-btn-cancel" class="flex-1 py-3 px-4 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition text-sm">Cancel</button>
+                <button id="modal-btn-ok" class="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition text-sm">OK</button>
             </div>
         </div>
     </div>
@@ -244,7 +272,84 @@
     <script type="module">
         import { loadState, saveState } from './storage.js';
 
-        // UI Elements
+        // --- INTERNAL MODAL LIBRARY ---
+        const Modal = {
+            el: document.getElementById('ui-modal'),
+            panel: document.querySelector('#ui-modal .glass-panel'),
+            title: document.getElementById('modal-title'),
+            msg: document.getElementById('modal-msg'),
+            btnOK: document.getElementById('modal-btn-ok'),
+            btnCancel: document.getElementById('modal-btn-cancel'),
+            icon: document.getElementById('modal-icon'),
+            iconBg: document.getElementById('modal-icon-bg'),
+            
+            show(title, text, type = 'info', okText = 'OK', cancelText = 'Cancel') {
+                return new Promise(resolve => {
+                    // Content
+                    this.title.textContent = title;
+                    this.msg.textContent = text;
+                    this.btnOK.textContent = okText;
+                    this.btnCancel.textContent = cancelText;
+                    
+                    // Styling
+                    let iconName = 'info';
+                    let bgClass = 'bg-indigo-100 text-indigo-600';
+                    let btnClass = 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200';
+
+                    if(type === 'error') {
+                        iconName = 'alert-circle';
+                        bgClass = 'bg-red-100 text-red-600';
+                        btnClass = 'bg-red-500 hover:bg-red-600 shadow-red-200';
+                    } else if (type === 'success') {
+                        iconName = 'check-circle-2';
+                        bgClass = 'bg-green-100 text-green-600';
+                        btnClass = 'bg-green-500 hover:bg-green-600 shadow-green-200';
+                    } else if (type === 'danger-confirm') {
+                        iconName = 'trash-2';
+                        bgClass = 'bg-red-100 text-red-600';
+                        btnClass = 'bg-red-500 hover:bg-red-600 shadow-red-200';
+                    }
+
+                    this.iconBg.className = `mb-4 p-3 rounded-full ${bgClass}`;
+                    this.icon.setAttribute('data-lucide', iconName);
+                    this.btnOK.className = `flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg transition text-sm ${btnClass}`;
+                    
+                    // Button Visibility
+                    if(type === 'confirm' || type === 'danger-confirm') {
+                        this.btnCancel.classList.remove('hidden');
+                    } else {
+                        this.btnCancel.classList.add('hidden');
+                    }
+                    
+                    if(window.lucide) lucide.createIcons();
+
+                    // Animate In
+                    this.el.classList.remove('hidden');
+                    requestAnimationFrame(() => {
+                        this.el.classList.remove('opacity-0');
+                        this.panel.classList.remove('scale-95');
+                        this.panel.classList.add('scale-100');
+                    });
+
+                    // Handlers
+                    const close = (result) => {
+                        this.el.classList.add('opacity-0');
+                        this.panel.classList.add('scale-95');
+                        this.panel.classList.remove('scale-100');
+                        setTimeout(() => {
+                            this.el.classList.add('hidden');
+                            resolve(result);
+                        }, 300);
+                    };
+
+                    this.btnOK.onclick = () => close(true);
+                    this.btnCancel.onclick = () => close(false);
+                });
+            }
+        };
+
+        // --- MAIN APP LOGIC ---
+
         const cards = {
             apple: document.getElementById('card-apple'),
             google: document.getElementById('card-google'),
@@ -262,13 +367,13 @@
         const btnCopy = document.getElementById('btn-copy-id');
         const btnShare = document.getElementById('btn-share-id');
 
-        // --- Helper: Clipboard Copy (Robust) ---
+        // --- Helper: Clipboard Copy ---
         async function copyTextToClipboard(text) {
             if (navigator.clipboard && window.isSecureContext) {
                 try {
                     await navigator.clipboard.writeText(text);
                     return true;
-                } catch (e) { console.warn("Clipboard API fail:", e); }
+                } catch (e) { }
             }
             // Fallback
             const textArea = document.createElement("textarea");
@@ -315,25 +420,19 @@
         async function updateShortID(uid) {
             const state = window.VTrainer.loadState();
             
-            // 1. Do we already have the ID locally?
             if (state.settings.cloudShortId) {
                 shortIdDisplay.textContent = state.settings.cloudShortId;
                 shortIdSection.classList.remove('hidden');
                 return;
             }
 
-            // 2. No, so fetch it
             shortIdDisplay.textContent = "...";
-            shortIdSection.classList.remove('hidden'); // Show loader
+            shortIdSection.classList.remove('hidden'); 
             
             try {
                 const id = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
-                if(id) {
-                    shortIdDisplay.textContent = id;
-                    // State was already saved in getOrRegisterShortId
-                } else {
-                    shortIdDisplay.textContent = "ERROR";
-                }
+                if(id) shortIdDisplay.textContent = id;
+                else shortIdDisplay.textContent = "ERROR";
             } catch(e) {
                 console.error("ID Fetch Error", e);
                 shortIdDisplay.textContent = "ERR";
@@ -345,11 +444,8 @@
             const state = window.VTrainer.loadState();
             
             if (user) {
-                // Logged in
                 uidContainer.classList.remove('hidden');
                 uidDisplay.textContent = user.uid;
-
-                // Load Short ID
                 updateShortID(user.uid);
 
                 if (user.isAnonymous) {
@@ -370,7 +466,6 @@
                     }
                 }
             } else {
-                // Logged out / Local
                 uidContainer.classList.add('hidden');
                 shortIdSection.classList.add('hidden');
                 
@@ -409,16 +504,15 @@
             if(!txt || txt === "..." || txt === "ERROR") return;
 
             const shareData = {
-                title: 'My Vocabulary Trainer Code',
+                title: 'Vocabulary Trainer Code',
                 text: `Here is my Vocabulary Trainer code for sync: ${txt}`,
             };
 
             if (navigator.share) {
                 try { await navigator.share(shareData); } catch(e) { console.log(e); }
             } else {
-                // Fallback Copy
                 btnCopy.click();
-                alert("Sharing not supported by this browser. Code copied to clipboard.");
+                await Modal.show("Info", "Sharing not supported by this browser. Code copied to clipboard.");
             }
         };
 
@@ -434,12 +528,12 @@
             }
         }, 100);
 
-        // --- CARD CLICKS ---
+        // --- CARD CLICKS (Using Custom Modal) ---
 
         cards.apple.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
             if (currentUser && currentUser.isAnonymous) {
-                if(confirm("Do you want to save your current learning progress with your Apple ID?")) {
+                if(await Modal.show("Link Account", "Do you want to save your current learning progress with your Apple ID?", "confirm")) {
                     setLoading('apple', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToApple();
@@ -448,8 +542,8 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        alert("Successfully linked with Apple!");
-                    } catch(e) { alert("Error: " + e.message); }
+                        await Modal.show("Success", "Successfully linked with Apple!", "success");
+                    } catch(e) { await Modal.show("Error", e.message, "error"); }
                     setLoading('apple', false);
                     return;
                 }
@@ -462,14 +556,14 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') alert("Login Error: " + e.message); }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Login Failed", e.message, "error"); }
             setLoading('apple', false);
         };
 
         cards.google.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
             if (currentUser && currentUser.isAnonymous) {
-                if(confirm("Do you want to save your current learning progress with your Google Account?")) {
+                if(await Modal.show("Link Account", "Do you want to save your current learning progress with your Google Account?", "confirm")) {
                     setLoading('google', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToGoogle();
@@ -478,8 +572,8 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        alert("Successfully linked with Google!");
-                    } catch(e) { alert("Error: " + e.message); }
+                        await Modal.show("Success", "Successfully linked with Google!", "success");
+                    } catch(e) { await Modal.show("Error", e.message, "error"); }
                     setLoading('google', false);
                     return;
                 }
@@ -492,7 +586,7 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') alert("Login Error: " + e.message); }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Login Failed", e.message, "error"); }
             setLoading('google', false);
         };
 
@@ -509,7 +603,7 @@
                 await window.VTrainerCloud.getOrRegisterShortId(user.uid, state);
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) { alert("Error: " + e.message); }
+            } catch(e) { await Modal.show("Error", e.message, "error"); }
             setLoading('anon', false);
         };
 
@@ -517,10 +611,11 @@
             const user = window.VTrainerCloud.getUser();
             if(!user) return; 
 
-            if(!confirm("Disconnect from Cloud?")) return;
+            if(!await Modal.show("Disconnect", "Disconnect from Cloud?", "confirm")) return;
+            
             let deleteCloud = false;
             if (user) {
-                deleteCloud = confirm("Do you want to completely delete your data in the cloud (including backup)?\n\nOK = Yes, delete\nCancel = No, keep data");
+                deleteCloud = await Modal.show("Delete Data?", "Do you want to completely delete your learning progress in the cloud?\n\n(This cannot be undone)", "danger-confirm", "Yes, delete", "No, keep data");
             }
 
             setLoading('local', true);
@@ -535,8 +630,8 @@
                 state.settings.cloudShortId = null;
                 window.VTrainer.saveState(state);
                 updateUI(null);
-                alert("You are now in Offline Mode.");
-            } catch(e) { alert("Error disconnecting: " + e.message); }
+                await Modal.show("Offline", "You are now in Offline Mode.", "info");
+            } catch(e) { await Modal.show("Error", "Disconnect failed: " + e.message, "error"); }
             setLoading('local', false);
         };
 
