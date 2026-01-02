@@ -14,7 +14,7 @@
     <script type="module" src="./storage.js"></script>
 
     <style>
-        /* --- YOUR COLORS --- */
+        /* --- BACKGROUND --- */
         @keyframes livingGradientShift {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
@@ -27,68 +27,92 @@
             animation: livingGradientShift 60s ease infinite;
         }
 
-        /* --- UI Styles --- */
+        /* --- LIGHT GLASS UI STYLES (Restored & Enhanced) --- */
         body {
             font-family: 'Nunito', sans-serif;
             overscroll-behavior-y: none;
-            color: #1e293b;
+            color: #0f172a; /* Slate-900 (Starker Kontrast) */
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Haupt-Panel (Helles Glas) */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.45); /* Mehr Deckkraft für Lesbarkeit */
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
             box-shadow: 
-                0 20px 40px -5px rgba(0, 0, 0, 0.15), 
-                inset 0 0 30px rgba(255, 255, 255, 0.3);
+                0 20px 40px -5px rgba(0, 0, 0, 0.1), 
+                inset 0 0 30px rgba(255, 255, 255, 0.4);
             transition: opacity 0.3s ease;
         }
 
+        /* Die Karten (Weißlich, gut lesbar) */
         .auth-card {
-            background: rgba(255, 255, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.7); /* Hohe Deckkraft */
+            border: 1px solid rgba(255, 255, 255, 0.8);
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: pointer;
             position: relative;
             overflow: hidden;
             user-select: none; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        .auth-card:active { transform: scale(0.96); }
+        .auth-card:active { 
+            transform: scale(0.96); 
+            background: rgba(255, 255, 255, 0.9);
+        }
 
-        /* Apple Button Special */
+        /* Apple Button Special (Schwarz für Kontrast) */
         .auth-card.apple {
-            background: rgba(0, 0, 0, 0.85);
+            background: #000000;
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .auth-card.apple:active { background: #000; }
-        .auth-card.apple .text-slate-500 { color: rgba(255,255,255,0.6); }
+        .auth-card.apple:active { background: #1a1a1a; }
+        .auth-card.apple .card-subtext { color: rgba(255,255,255,0.7) !important; }
+        .auth-card.apple .card-title { color: white !important; }
 
-        /* Status Badge Animation (Green Pulse) */
+        /* Typografie */
+        .card-title { color: #1e293b; font-weight: 900; } /* Slate-800 */
+        .card-subtext { color: #475569; font-weight: 700; font-size: 0.75rem; } /* Slate-600 */
+
+        /* Icons */
+        .icon-box {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 0.5rem;
+            padding: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .auth-card.apple .icon-box { background: rgba(255, 255, 255, 0.2); }
+        .auth-card.anon .icon-box { background: rgba(99, 102, 241, 0.1); color: #6366f1; }
+        .auth-card.local .icon-box { background: rgba(148, 163, 184, 0.1); color: #64748b; }
+
+        /* Status Badge Animation */
         @keyframes border-pulse {
-            0% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-            70% { border-color: rgba(16, 185, 129, 1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.2); }
+            70% { border-color: rgba(34, 197, 94, 1); box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { border-color: rgba(34, 197, 94, 0.5); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
         .status-active {
             animation: border-pulse 2s infinite;
-            background: rgba(240, 253, 244, 0.95) !important;
+            background: #f0fdf4 !important; /* Sehr helles Grün */
+            border-color: #22c55e !important;
         }
         .auth-card.apple.status-active {
-            background: rgba(20, 83, 45, 0.95) !important;
+            background: #064e3b !important; /* Dunkelgrün für Apple */
             border-color: #4ade80 !important;
         }
-
+        
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
         
+        /* Loader */
         .card-loader {
             position: absolute;
             inset: 0;
-            background: rgba(255,255,255,0.8);
+            background: rgba(255, 255, 255, 0.95);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -98,17 +122,11 @@
             transition: opacity 0.2s;
         }
         .card-loader.visible { opacity: 1; pointer-events: auto; }
-        .auth-card.apple .card-loader { background: rgba(0,0,0,0.8); }
+        .auth-card.apple .card-loader { background: rgba(0,0,0,0.9); }
 
-        /* --- CUSTOM MODAL STYLES --- */
-        .modal-enter {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        .modal-active {
-            opacity: 1;
-            transform: scale(1);
-        }
+        /* Modal Styles */
+        .modal-enter { opacity: 0; transform: scale(0.95); }
+        .modal-active { opacity: 1; transform: scale(1); }
 
     </style>
 </head>
@@ -116,9 +134,9 @@
 <body class="living-gradient-bg w-full min-h-[100dvh] flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto overflow-x-hidden supports-[min-height:100dvh]:min-h-[100dvh]">
 
     <!-- Background Elements -->
-    <div class="fixed inset-0 pointer-events-none opacity-20 flex items-center justify-center overflow-hidden">
-        <div class="w-[80vw] h-[80vw] border-[3px] border-white/20 rounded-[3rem] transform -rotate-12 absolute -top-20 -left-20"></div>
-        <div class="w-[60vw] h-[60vw] border-[3px] border-white/20 rounded-full absolute -bottom-10 -right-10"></div>
+    <div class="fixed inset-0 pointer-events-none opacity-25 flex items-center justify-center overflow-hidden">
+        <div class="w-[80vw] h-[80vw] border-[3px] border-white/40 rounded-[3rem] transform -rotate-12 absolute -top-20 -left-20"></div>
+        <div class="w-[60vw] h-[60vw] border-[3px] border-white/40 rounded-full absolute -bottom-10 -right-10"></div>
     </div>
 
     <!-- MAIN UI CONTAINER -->
@@ -127,17 +145,17 @@
         <!-- Header -->
         <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-                <div class="p-2.5 bg-white/60 rounded-xl shadow-sm backdrop-blur-md">
-                    <i data-lucide="cloud" class="w-6 h-6 text-indigo-600"></i>
+                <div class="p-2.5 bg-white rounded-xl shadow-md border border-white/50">
+                    <i data-lucide="cloud" class="w-7 h-7 text-indigo-600"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-black text-slate-800 tracking-tight leading-none">Cloud Sync</h1>
-                    <p class="text-xs font-bold text-slate-500/80 mt-1" id="status-text">Loading status...</p>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none">Cloud Sync</h1>
+                    <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-wide" id="status-text">Loading...</p>
                 </div>
             </div>
             
             <button onclick="window.location.reload()" class="p-2 -mr-2 text-slate-400 hover:text-slate-700 active:scale-90 transition rounded-full" title="Reload UI">
-                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+                <i data-lucide="refresh-cw" class="w-6 h-6"></i>
             </button>
         </div>
 
@@ -145,126 +163,125 @@
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
             <!-- 1. APPLE -->
-            <div id="card-apple" class="auth-card apple p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between shadow-lg shadow-black/10">
-                <div class="card-loader"><i data-lucide="loader-2" class="w-6 h-6 text-white animate-spin"></i></div>
+            <div id="card-apple" class="auth-card apple p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between shadow-xl">
+                <div class="card-loader"><i data-lucide="loader-2" class="w-8 h-8 text-white animate-spin"></i></div>
                 <div class="flex items-center gap-3 sm:w-full sm:justify-between">
-                    <div class="p-1.5 bg-white/20 rounded-lg">
-                        <svg class="w-5 h-5 text-white fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 1.95.29 2.94.92-.06.04 1.6 1.05 1.54 3.31-.02 2.27-1.39 3.53-1.91 4.31-.95 1.44-2.16 2.97-3.34 4.62zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.16 2.29-1.6 4.28-3.74 4.25z"/></svg>
+                    <div class="icon-box">
+                        <svg class="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 1.95.29 2.94.92-.06.04 1.6 1.05 1.54 3.31-.02 2.27-1.39 3.53-1.91 4.31-.95 1.44-2.16 2.97-3.34 4.62zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.16 2.29-1.6 4.28-3.74 4.25z"/></svg>
                     </div>
-                    <span class="sm:hidden font-bold text-base">Apple Sign-In</span>
+                    <span class="sm:hidden card-title text-lg">Apple Sign-In</span>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg mb-0.5">Apple</h3>
-                    <p class="text-xs text-slate-400 font-medium">Recommended for iOS</p>
+                    <h3 class="card-title text-xl mb-0.5">Apple</h3>
+                    <p class="card-subtext">Recommended for iOS</p>
                 </div>
                 <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-400 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
             <!-- 2. GOOGLE -->
             <div id="card-google" class="auth-card google p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between">
-                <div class="card-loader"><i data-lucide="loader-2" class="w-6 h-6 text-indigo-600 animate-spin"></i></div>
+                <div class="card-loader"><i data-lucide="loader-2" class="w-8 h-8 text-indigo-600 animate-spin"></i></div>
                 <div class="flex items-center gap-3 sm:w-full sm:justify-between">
-                    <div class="p-1.5 bg-white rounded-lg shadow-sm">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <div class="icon-box">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                     </div>
-                    <span class="sm:hidden font-bold text-slate-700 text-base">Google Account</span>
+                    <span class="sm:hidden card-title text-lg">Google Account</span>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Google</h3>
-                    <p class="text-xs text-slate-500 font-medium">Permanent Storage</p>
+                    <h3 class="card-title text-xl mb-0.5">Google</h3>
+                    <p class="card-subtext">Permanent Storage</p>
                 </div>
-                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
+                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-600 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
             <!-- 3. ANONYM -->
             <div id="card-anon" class="auth-card anon p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between">
-                <div class="card-loader"><i data-lucide="loader-2" class="w-6 h-6 text-indigo-600 animate-spin"></i></div>
+                <div class="card-loader"><i data-lucide="loader-2" class="w-8 h-8 text-indigo-600 animate-spin"></i></div>
                 <div class="flex items-center gap-3 sm:w-full sm:justify-between">
-                    <div class="p-1.5 bg-indigo-100 rounded-lg text-indigo-600">
-                        <i data-lucide="ghost" class="w-5 h-5"></i>
+                    <div class="icon-box">
+                        <i data-lucide="ghost" class="w-6 h-6"></i>
                     </div>
-                    <span class="sm:hidden font-bold text-slate-700 text-base">Start Anonymously</span>
+                    <span class="sm:hidden card-title text-lg">Start Anonymously</span>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg text-slate-700 mb-0.5">Anonymous</h3>
-                    <p class="text-xs text-slate-500 font-medium">Sync via Code</p>
+                    <h3 class="card-title text-xl mb-0.5">Anonymous</h3>
+                    <p class="card-subtext">Sync via Code</p>
                 </div>
-                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
+                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-600 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
             <!-- 4. LOKAL -->
-            <div id="card-local" class="auth-card p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between border-slate-300 bg-slate-50/50">
-                <div class="card-loader"><i data-lucide="loader-2" class="w-6 h-6 text-slate-600 animate-spin"></i></div>
+            <div id="card-local" class="auth-card local p-4 rounded-xl flex items-center justify-between group h-20 sm:h-32 sm:flex-col sm:items-start sm:justify-between bg-white/60">
+                <div class="card-loader"><i data-lucide="loader-2" class="w-8 h-8 text-slate-600 animate-spin"></i></div>
                 <div class="flex items-center gap-3 sm:w-full sm:justify-between">
-                    <div class="p-1.5 bg-slate-200 rounded-lg text-slate-600">
-                        <i data-lucide="hard-drive" class="w-5 h-5"></i>
+                    <div class="icon-box">
+                        <i data-lucide="hard-drive" class="w-6 h-6"></i>
                     </div>
                     <div class="sm:hidden flex flex-col">
-                        <span class="font-bold text-slate-600 text-base">Local Only</span>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">No Sync</span>
+                        <span class="card-title text-lg">Local Only</span>
+                        <span class="text-[10px] text-slate-500 uppercase font-black tracking-wider">No Sync</span>
                     </div>
                 </div>
                 <div class="hidden sm:block">
-                    <h3 class="font-bold text-lg text-slate-600 mb-0.5">Local</h3>
-                    <p class="text-xs text-slate-400 font-medium">Offline Mode</p>
+                    <h3 class="card-title text-xl mb-0.5">Local</h3>
+                    <p class="card-subtext">Offline Mode</p>
                 </div>
-                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-500 hidden sm:absolute sm:top-4 sm:right-4"></i>
+                <i data-lucide="check-circle-2" class="active-icon w-6 h-6 text-green-600 hidden sm:absolute sm:top-4 sm:right-4"></i>
             </div>
 
         </div>
 
-        <!-- NEW: Short ID Display & Actions (Visible when logged in) -->
-        <div id="short-id-section" class="hidden mt-4 p-4 bg-white/40 rounded-xl border border-white/60 flex flex-col items-center animate-pop shadow-sm">
-            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Your Sync-ID</span>
+        <!-- Short ID Display (Light Mode Style) -->
+        <div id="short-id-section" class="hidden mt-4 p-5 bg-white/90 backdrop-blur rounded-2xl border border-white shadow-lg flex flex-col items-center animate-pop">
+            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Your Sync-ID</span>
             <div class="flex items-center gap-3">
-                <span id="display-short-id" class="text-3xl font-black text-indigo-600 tracking-widest font-mono">...</span>
+                <span id="display-short-id" class="text-4xl font-black text-indigo-600 tracking-widest font-mono drop-shadow-sm">...</span>
             </div>
             
-            <div class="flex gap-2 mt-3 w-full sm:w-auto">
-                <button id="btn-copy-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-indigo-600 rounded-lg text-xs font-bold shadow-sm border border-indigo-100 hover:bg-indigo-50 active:scale-95 transition">
-                    <i data-lucide="copy" class="w-3.5 h-3.5"></i> Copy
+            <div class="flex gap-2 mt-4 w-full sm:w-auto">
+                <button id="btn-copy-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-white text-indigo-700 rounded-xl text-sm font-bold shadow-sm border-2 border-indigo-50 hover:bg-indigo-50 active:scale-95 transition">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Copy
                 </button>
-                <button id="btn-share-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition">
-                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i> Share
+                <button id="btn-share-id" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 active:scale-95 transition">
+                    <i data-lucide="share-2" class="w-4 h-4"></i> Share
                 </button>
             </div>
-            <p class="text-[10px] text-slate-400 mt-2 text-center max-w-[220px] leading-tight">
+            <p class="text-[11px] font-bold text-slate-500 mt-3 text-center max-w-[220px] leading-tight">
                 Use this code to restore your learning progress on other devices.
             </p>
         </div>
 
         <!-- Footer Info -->
-        <div class="mt-6 pt-4 border-t border-slate-200/50 flex flex-col items-center gap-2 text-center">
+        <div class="mt-6 pt-4 border-t border-slate-900/10 flex flex-col items-center gap-2 text-center">
             
-            <!-- Technical UID (Debug/Support) -->
-            <div id="uid-container" class="hidden text-[10px] text-slate-300 font-mono mb-1 select-all">
+            <div id="uid-container" class="hidden text-[10px] text-slate-500 font-mono mb-1 select-all font-bold">
                 UID: <span id="display-uid">...</span>
             </div>
 
-            <div class="flex items-center gap-1.5 text-xs text-slate-500 font-semibold bg-white/30 px-3 py-1 rounded-full">
-                <i data-lucide="shield-check" class="w-3 h-3 text-green-600"></i>
+            <div class="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white/50 px-4 py-1.5 rounded-full border border-white/50">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-green-600"></i>
                 <span>Encrypted & GDPR Compliant</span>
             </div>
-            <div class="text-[10px] text-slate-400 mt-1 pb-safe">
-                Safe Area Protected • v9.7 UI-Polish
+            <div class="text-[10px] font-bold text-slate-500 mt-1 pb-safe">
+                Safe Area Protected • v9.9 LightGlass
             </div>
         </div>
     </div>
 
-    <!-- CUSTOM MODAL COMPONENT -->
-    <div id="ui-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-panel w-[90%] max-w-sm p-6 transform scale-95 transition-transform duration-300 shadow-2xl flex flex-col items-center text-center">
-            <!-- Dynamic Icon -->
-            <div id="modal-icon-bg" class="mb-4 p-3 rounded-full bg-indigo-100 text-indigo-600">
-                <i id="modal-icon" data-lucide="info" class="w-6 h-6"></i>
+    <!-- CUSTOM MODAL (Fixed for Readability) -->
+    <div id="ui-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md hidden opacity-0 transition-opacity duration-300">
+        <!-- Weißer Hintergrund (95% Deckkraft) für perfekten Kontrast -->
+        <div class="glass-panel w-[90%] max-w-sm p-6 transform scale-95 transition-transform duration-300 shadow-2xl flex flex-col items-center text-center bg-white/95 border border-white/50">
+            <div id="modal-icon-bg" class="mb-4 p-4 rounded-full bg-indigo-100 text-indigo-600">
+                <i id="modal-icon" data-lucide="info" class="w-8 h-8"></i>
             </div>
             
-            <h3 id="modal-title" class="text-lg font-black text-slate-800 mb-2">Title</h3>
-            <p id="modal-msg" class="text-sm text-slate-600 mb-6 leading-relaxed">Message goes here...</p>
+            <h3 id="modal-title" class="text-xl font-black text-slate-800 mb-2">Title</h3>
+            <p id="modal-msg" class="text-sm font-bold text-slate-600 mb-8 leading-relaxed">Message goes here...</p>
             
             <div class="flex gap-3 w-full">
-                <button id="modal-btn-cancel" class="flex-1 py-3 px-4 rounded-xl font-bold text-slate-500 hover:bg-slate-100 transition text-sm">Cancel</button>
-                <button id="modal-btn-ok" class="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition text-sm">OK</button>
+                <button id="modal-btn-cancel" class="flex-1 py-3.5 px-4 rounded-xl font-black text-slate-600 bg-slate-100 hover:bg-slate-200 transition text-sm">Cancel</button>
+                <button id="modal-btn-ok" class="flex-1 py-3.5 px-4 rounded-xl font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-200 transition text-sm">OK</button>
             </div>
         </div>
     </div>
@@ -272,7 +289,7 @@
     <script type="module">
         import { loadState, saveState } from './storage.js';
 
-        // --- INTERNAL MODAL LIBRARY ---
+        // --- MODAL LIBRARY ---
         const Modal = {
             el: document.getElementById('ui-modal'),
             panel: document.querySelector('#ui-modal .glass-panel'),
@@ -285,13 +302,11 @@
             
             show(title, text, type = 'info', okText = 'OK', cancelText = 'Cancel') {
                 return new Promise(resolve => {
-                    // Content
                     this.title.textContent = title;
                     this.msg.textContent = text;
                     this.btnOK.textContent = okText;
                     this.btnCancel.textContent = cancelText;
                     
-                    // Styling
                     let iconName = 'info';
                     let bgClass = 'bg-indigo-100 text-indigo-600';
                     let btnClass = 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200';
@@ -299,22 +314,23 @@
                     if(type === 'error') {
                         iconName = 'alert-circle';
                         bgClass = 'bg-red-100 text-red-600';
-                        btnClass = 'bg-red-500 hover:bg-red-600 shadow-red-200';
+                        btnClass = 'bg-red-600 hover:bg-red-500 shadow-red-200';
                     } else if (type === 'success') {
                         iconName = 'check-circle-2';
                         bgClass = 'bg-green-100 text-green-600';
-                        btnClass = 'bg-green-500 hover:bg-green-600 shadow-green-200';
+                        btnClass = 'bg-green-600 hover:bg-green-500 shadow-green-200';
                     } else if (type === 'danger-confirm') {
                         iconName = 'trash-2';
                         bgClass = 'bg-red-100 text-red-600';
-                        btnClass = 'bg-red-500 hover:bg-red-600 shadow-red-200';
+                        btnClass = 'bg-red-600 hover:bg-red-500 shadow-red-200';
+                    } else if (type === 'confirm') {
+                        iconName = 'help-circle';
                     }
 
-                    this.iconBg.className = `mb-4 p-3 rounded-full ${bgClass}`;
+                    this.iconBg.className = `mb-4 p-4 rounded-full ${bgClass}`;
                     this.icon.setAttribute('data-lucide', iconName);
-                    this.btnOK.className = `flex-1 py-3 px-4 rounded-xl font-bold text-white shadow-lg transition text-sm ${btnClass}`;
+                    this.btnOK.className = `flex-1 py-3.5 px-4 rounded-xl font-black text-white shadow-lg transition text-sm ${btnClass}`;
                     
-                    // Button Visibility
                     if(type === 'confirm' || type === 'danger-confirm') {
                         this.btnCancel.classList.remove('hidden');
                     } else {
@@ -323,7 +339,6 @@
                     
                     if(window.lucide) lucide.createIcons();
 
-                    // Animate In
                     this.el.classList.remove('hidden');
                     requestAnimationFrame(() => {
                         this.el.classList.remove('opacity-0');
@@ -331,7 +346,6 @@
                         this.panel.classList.add('scale-100');
                     });
 
-                    // Handlers
                     const close = (result) => {
                         this.el.classList.add('opacity-0');
                         this.panel.classList.add('scale-95');
@@ -348,8 +362,7 @@
             }
         };
 
-        // --- MAIN APP LOGIC ---
-
+        // --- UI REFS ---
         const cards = {
             apple: document.getElementById('card-apple'),
             google: document.getElementById('card-google'),
@@ -357,43 +370,26 @@
             local: document.getElementById('card-local')
         };
         const statusText = document.getElementById('status-text');
-        
-        // ID Section
         const shortIdSection = document.getElementById('short-id-section');
         const shortIdDisplay = document.getElementById('display-short-id');
         const uidContainer = document.getElementById('uid-container');
         const uidDisplay = document.getElementById('display-uid');
-        
         const btnCopy = document.getElementById('btn-copy-id');
         const btnShare = document.getElementById('btn-share-id');
 
-        // --- Helper: Clipboard Copy ---
+        // --- UTILS ---
         async function copyTextToClipboard(text) {
             if (navigator.clipboard && window.isSecureContext) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                } catch (e) { }
+                try { await navigator.clipboard.writeText(text); return true; } catch (e) {}
             }
-            // Fallback
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.opacity = "0";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            try {
-                const successful = document.execCommand('copy');
-                document.body.removeChild(textArea);
-                return successful;
-            } catch (err) {
-                document.body.removeChild(textArea);
-                return false;
-            }
+            textArea.style.position = "fixed"; textArea.style.opacity = "0";
+            document.body.appendChild(textArea); textArea.focus(); textArea.select();
+            try { const successful = document.execCommand('copy'); document.body.removeChild(textArea); return successful; } 
+            catch (err) { document.body.removeChild(textArea); return false; }
         }
 
-        // --- Helper: Loading & Active ---
         const setLoading = (cardKey, isLoading) => {
             const card = cards[cardKey];
             if(!card) return;
@@ -416,33 +412,28 @@
             });
         };
 
-        // --- Short ID Logic ---
+        // --- ID LOGIC ---
         async function updateShortID(uid) {
             const state = window.VTrainer.loadState();
-            
             if (state.settings.cloudShortId) {
                 shortIdDisplay.textContent = state.settings.cloudShortId;
                 shortIdSection.classList.remove('hidden');
                 return;
             }
-
             shortIdDisplay.textContent = "...";
             shortIdSection.classList.remove('hidden'); 
-            
             try {
                 const id = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
                 if(id) shortIdDisplay.textContent = id;
                 else shortIdDisplay.textContent = "ERROR";
             } catch(e) {
-                console.error("ID Fetch Error", e);
+                console.error("ID Error", e);
                 shortIdDisplay.textContent = "ERR";
             }
         }
 
-        // --- Main UI Update ---
         const updateUI = (user) => {
             const state = window.VTrainer.loadState();
-            
             if (user) {
                 uidContainer.classList.remove('hidden');
                 uidDisplay.textContent = user.uid;
@@ -454,13 +445,10 @@
                 } else {
                     const isApple = user.providerData.some(p => p.providerId === 'apple.com');
                     const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
-                    
                     if (isApple) {
-                        setActiveCard('apple');
-                        statusText.textContent = "Connected with Apple";
+                        setActiveCard('apple'); statusText.textContent = "Connected with Apple";
                     } else if (isGoogle) {
-                        setActiveCard('google');
-                        statusText.textContent = "Connected with Google";
+                        setActiveCard('google'); statusText.textContent = "Connected with Google";
                     } else {
                         setActiveCard('anon'); 
                     }
@@ -468,31 +456,27 @@
             } else {
                 uidContainer.classList.add('hidden');
                 shortIdSection.classList.add('hidden');
-                
                 if (state.settings.isCloudEnabled === false) {
-                    setActiveCard('local');
-                    statusText.textContent = "Local (Offline)";
+                    setActiveCard('local'); statusText.textContent = "Local (Offline)";
                 } else {
-                    setActiveCard(null);
-                    statusText.textContent = "Please select...";
+                    setActiveCard(null); statusText.textContent = "Please select...";
                 }
             }
         };
 
-        // --- Action Buttons ---
-        
         btnCopy.onclick = async () => {
             const txt = shortIdDisplay.textContent;
             if(txt && txt !== "..." && txt !== "ERROR") {
-                const success = await copyTextToClipboard(txt);
-                if(success) {
+                if(await copyTextToClipboard(txt)) {
                     const original = btnCopy.innerHTML;
-                    btnCopy.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copied!';
-                    btnCopy.classList.add('bg-green-50', 'text-green-600', 'border-green-200');
+                    btnCopy.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Copied!';
+                    btnCopy.classList.remove('bg-white', 'text-indigo-700');
+                    btnCopy.classList.add('bg-green-100', 'text-green-600', 'border-green-200');
                     if(window.lucide) lucide.createIcons();
                     setTimeout(() => {
                         btnCopy.innerHTML = original;
-                        btnCopy.classList.remove('bg-green-50', 'text-green-600', 'border-green-200');
+                        btnCopy.classList.add('bg-white', 'text-indigo-700');
+                        btnCopy.classList.remove('bg-green-100', 'text-green-600', 'border-green-200');
                         if(window.lucide) lucide.createIcons();
                     }, 2000);
                 }
@@ -502,38 +486,22 @@
         btnShare.onclick = async () => {
             const txt = shortIdDisplay.textContent;
             if(!txt || txt === "..." || txt === "ERROR") return;
-
-            const shareData = {
-                title: 'Vocabulary Trainer Code',
-                text: `Here is my Vocabulary Trainer code for sync: ${txt}`,
-            };
-
-            if (navigator.share) {
-                try { await navigator.share(shareData); } catch(e) { console.log(e); }
-            } else {
-                btnCopy.click();
-                await Modal.show("Info", "Sharing not supported by this browser. Code copied to clipboard.");
-            }
+            const shareData = { title: 'Vocabulary Trainer', text: `Sync Code: ${txt}` };
+            if (navigator.share) { try { await navigator.share(shareData); } catch(e){} } 
+            else { btnCopy.click(); await Modal.show("Info", "Code copied to clipboard.", "info"); }
         };
 
-        // --- INIT ---
         setTimeout(async () => {
             if(window.lucide) lucide.createIcons();
-            try {
-                const user = await window.VTrainerCloud.initAuth();
-                updateUI(user);
-            } catch(e) {
-                console.error(e);
-                statusText.textContent = "Error loading status";
-            }
+            try { const user = await window.VTrainerCloud.initAuth(); updateUI(user); } 
+            catch(e) { statusText.textContent = "Error loading"; }
         }, 100);
 
-        // --- CARD CLICKS (Using Custom Modal) ---
-
+        // --- HANDLERS ---
         cards.apple.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
             if (currentUser && currentUser.isAnonymous) {
-                if(await Modal.show("Link Account", "Do you want to save your current learning progress with your Apple ID?", "confirm")) {
+                if(await Modal.show("Link Account", "Save current progress with Apple ID?", "confirm")) {
                     setLoading('apple', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToApple();
@@ -542,7 +510,7 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        await Modal.show("Success", "Successfully linked with Apple!", "success");
+                        await Modal.show("Success", "Linked with Apple!", "success");
                     } catch(e) { await Modal.show("Error", e.message, "error"); }
                     setLoading('apple', false);
                     return;
@@ -556,14 +524,14 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Login Failed", e.message, "error"); }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Error", e.message, "error"); }
             setLoading('apple', false);
         };
 
         cards.google.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
             if (currentUser && currentUser.isAnonymous) {
-                if(await Modal.show("Link Account", "Do you want to save your current learning progress with your Google Account?", "confirm")) {
+                if(await Modal.show("Link Account", "Save current progress with Google?", "confirm")) {
                     setLoading('google', true);
                     try {
                         const user = await window.VTrainerCloud.upgradeToGoogle();
@@ -572,7 +540,7 @@
                         state.settings.isCloudEnabled = true;
                         window.VTrainer.saveState(state);
                         updateUI(user);
-                        await Modal.show("Success", "Successfully linked with Google!", "success");
+                        await Modal.show("Success", "Linked with Google!", "success");
                     } catch(e) { await Modal.show("Error", e.message, "error"); }
                     setLoading('google', false);
                     return;
@@ -586,14 +554,13 @@
                 state.settings.isCloudEnabled = true;
                 window.VTrainer.saveState(state);
                 updateUI(user);
-            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Login Failed", e.message, "error"); }
+            } catch(e) { if (e.code !== 'auth/popup-closed-by-user') await Modal.show("Error", e.message, "error"); }
             setLoading('google', false);
         };
 
         cards.anon.onclick = async () => {
             const currentUser = window.VTrainerCloud.getUser();
             if(currentUser && currentUser.isAnonymous) return; 
-
             setLoading('anon', true);
             try {
                 const user = await window.VTrainerCloud.loginAnonymous();
@@ -610,12 +577,11 @@
         cards.local.onclick = async () => {
             const user = window.VTrainerCloud.getUser();
             if(!user) return; 
-
             if(!await Modal.show("Disconnect", "Disconnect from Cloud?", "confirm")) return;
             
             let deleteCloud = false;
             if (user) {
-                deleteCloud = await Modal.show("Delete Data?", "Do you want to completely delete your learning progress in the cloud?\n\n(This cannot be undone)", "danger-confirm", "Yes, delete", "No, keep data");
+                deleteCloud = await Modal.show("Delete Data?", "Delete cloud backup permanently?\n(Cannot be undone)", "danger-confirm", "Delete", "Keep");
             }
 
             setLoading('local', true);
@@ -630,11 +596,10 @@
                 state.settings.cloudShortId = null;
                 window.VTrainer.saveState(state);
                 updateUI(null);
-                await Modal.show("Offline", "You are now in Offline Mode.", "info");
-            } catch(e) { await Modal.show("Error", "Disconnect failed: " + e.message, "error"); }
+                await Modal.show("Offline", "You are now offline.", "info");
+            } catch(e) { await Modal.show("Error", e.message, "error"); }
             setLoading('local', false);
         };
-
     </script>
 </body>
 </html>
