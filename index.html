@@ -3,174 +3,232 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Sync - Critical Functionality Testbed</title>
+    <title>Privacy & Auth Test</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- Import Module -->
     <script type="module" src="./storage.js"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 p-8 font-mono">
+<body class="bg-slate-900 text-slate-100 p-6 font-mono">
 
-    <div class="max-w-2xl mx-auto space-y-8">
+    <div class="max-w-3xl mx-auto space-y-6">
         
-        <header class="border-b border-slate-700 pb-4">
-            <h1 class="text-2xl font-bold text-teal-400">Step 85: Cloud ID Validation Testbed</h1>
-            <p class="text-sm text-slate-400 mt-2">Isolierte Umgebung zur Härtung der User-ID Generierung.</p>
+        <header class="border-b border-slate-700 pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-teal-400">Step 89: Privacy & Deletion</h1>
+                <p class="text-xs text-slate-400">Testet Löschung von Cloud-Daten bei Modus-Wechsel.</p>
+            </div>
+            <div id="auth-badge" class="px-3 py-1 rounded bg-slate-800 text-slate-400 text-xs font-bold">
+                Checking Auth...
+            </div>
         </header>
 
-        <!-- Control Panel -->
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                <i data-lucide="settings" class="w-5 h-5 text-indigo-400"></i> Controls
+        <!-- 1. AUTH MODE SELECTION -->
+        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700">
+            <h2 class="text-sm font-bold text-slate-400 uppercase mb-4 flex gap-2">
+                <i data-lucide="shield" class="w-4 h-4"></i> Datensicherheit & Login
             </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <button id="btn-init-test" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition shadow-lg shadow-blue-900/50 flex items-center justify-center gap-2">
-                    <i data-lucide="play" class="w-4 h-4"></i> Start Critical Path
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Lokal -->
+                <button id="btn-mode-local" class="p-4 rounded-lg border border-slate-600 hover:bg-slate-700 transition text-left group">
+                    <div class="text-slate-300 font-bold group-hover:text-white flex items-center gap-2">
+                        <i data-lucide="hard-drive" class="w-4 h-4"></i> Nur Lokal
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-1">Trennt Verbindung. Fragt nach Cloud-Löschung.</div>
                 </button>
 
-                <button id="btn-reset-local" class="bg-red-900/50 hover:bg-red-800/50 text-red-200 border border-red-800 font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                    <i data-lucide="trash" class="w-4 h-4"></i> Reset Local State
+                <!-- Anonym -->
+                <button id="btn-mode-anon" class="p-4 rounded-lg border border-indigo-600/50 bg-indigo-900/10 hover:bg-indigo-900/30 transition text-left group">
+                    <div class="text-indigo-300 font-bold group-hover:text-indigo-200 flex items-center gap-2">
+                        <i data-lucide="ghost" class="w-4 h-4"></i> Anonym
+                    </div>
+                    <div class="text-[10px] text-indigo-400/60 mt-1">Sync via Code. Temporärer Speicher.</div>
+                </button>
+
+                <!-- Google -->
+                <button id="btn-mode-google" class="p-4 rounded-lg border border-blue-600/50 bg-blue-900/10 hover:bg-blue-900/30 transition text-left group">
+                    <div class="text-blue-300 font-bold group-hover:text-blue-200 flex items-center gap-2">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Google
+                    </div>
+                    <div class="text-[10px] text-blue-400/60 mt-1">Dauerhaft & Sicher.</div>
                 </button>
             </div>
-        </div>
 
-        <!-- Diagnostic Display -->
-        <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-xl relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-teal-500" id="status-bar"></div>
-            
-            <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
-                <i data-lucide="activity" class="w-5 h-5 text-teal-400"></i> System State
-            </h2>
-
-            <div class="space-y-4">
-                <!-- Auth Status -->
-                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                    <span class="text-slate-400 text-sm uppercase font-bold tracking-wider">Firebase Auth</span>
-                    <span id="disp-auth" class="font-mono text-yellow-500">Waiting...</span>
+            <!-- Current ID Display -->
+            <div class="mt-4 p-3 bg-black/30 rounded border border-slate-700/50 flex justify-between items-center">
+                <div class="text-xs">
+                    <span class="text-slate-500">Aktuelle UID:</span>
+                    <span id="disp-uid" class="text-slate-300 ml-2 font-mono">---</span>
                 </div>
-
-                <!-- UID Status -->
-                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-                    <span class="text-slate-400 text-sm uppercase font-bold tracking-wider">Internal UID</span>
-                    <span id="disp-uid" class="font-mono text-slate-500 text-xs">---</span>
-                </div>
-
-                <!-- Critical ID Status -->
-                <div class="flex justify-between items-center bg-indigo-900/20 p-4 rounded-lg border border-indigo-500/30">
-                    <div class="flex flex-col">
-                        <span class="text-indigo-300 text-xs uppercase font-bold tracking-widest mb-1">Public Cloud ID</span>
-                        <span class="text-[10px] text-indigo-400/60">Must exist for sync</span>
-                    </div>
-                    <div class="text-right">
-                        <span id="disp-short-id" class="block font-mono text-2xl font-black text-slate-600">??????</span>
-                    </div>
+                <div class="text-xs">
+                    <span class="text-slate-500">Short ID:</span>
+                    <span id="disp-short-id" class="text-indigo-400 ml-2 font-black">---</span>
                 </div>
             </div>
         </div>
 
         <!-- Log Output -->
-        <div class="bg-black p-4 rounded-xl border border-slate-800 font-mono text-xs h-64 overflow-y-auto custom-scrollbar" id="console-log">
-            <div class="text-slate-500 italic">System ready. Waiting for input...</div>
+        <div class="bg-black p-4 rounded-xl border border-slate-800 font-mono text-xs h-48 overflow-y-auto custom-scrollbar" id="console-log">
+            <div class="text-slate-500 italic">System ready...</div>
         </div>
 
     </div>
 
     <script>
-        // Logger Helper
         const logArea = document.getElementById('console-log');
         function log(msg, type = 'info') {
             const el = document.createElement('div');
             const ts = new Date().toISOString().split('T')[1].split('.')[0];
-            
             let color = 'text-slate-300';
             if(type === 'error') color = 'text-red-400 font-bold';
             if(type === 'success') color = 'text-green-400 font-bold';
-            if(type === 'warn') color = 'text-orange-300';
-
+            if(type === 'warn') color = 'text-orange-300 font-bold';
             el.className = `mb-1 ${color}`;
             el.innerHTML = `<span class="opacity-50">[${ts}]</span> ${msg}`;
             logArea.appendChild(el);
             logArea.scrollTop = logArea.scrollHeight;
         }
 
-        // Wait for modules to load
-        setTimeout(() => {
-            if(window.lucide) lucide.createIcons();
+        function updateAuthUI(user) {
+            const badge = document.getElementById('auth-badge');
+            const uidDisp = document.getElementById('disp-uid');
             
-            // Check Module Availability
-            if(window.VTrainerCloud) {
-                log("Module 'storage.js' loaded successfully.", 'success');
+            if (user) {
+                const isAnon = user.isAnonymous; 
+                badge.textContent = isAnon ? "Angemeldet (Anonym)" : "Angemeldet (Google)";
+                badge.className = isAnon ? "px-3 py-1 rounded bg-indigo-900 text-indigo-200 text-xs font-bold" : "px-3 py-1 rounded bg-blue-900 text-blue-200 text-xs font-bold";
+                uidDisp.textContent = user.uid;
             } else {
-                log("CRITICAL ERROR: 'storage.js' not loaded.", 'error');
+                badge.textContent = "Lokal (Nicht angemeldet)";
+                badge.className = "px-3 py-1 rounded bg-slate-700 text-slate-400 text-xs font-bold";
+                uidDisp.textContent = "---";
             }
+        }
+
+        async function refreshShortID(state) {
+            const uid = window.VTrainerCloud.getUID();
+            const disp = document.getElementById('disp-short-id');
+            if(state.settings.cloudShortId) {
+                disp.textContent = state.settings.cloudShortId;
+            } else if (uid) {
+                const id = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
+                disp.textContent = id || "(Generiere...)";
+            } else {
+                disp.textContent = "---";
+            }
+        }
+
+        setTimeout(async () => {
+            if(window.lucide) lucide.createIcons();
+            window.VTrainerCloud.initAuth().then(user => {
+                updateAuthUI(user);
+                const state = window.VTrainer.loadState();
+                refreshShortID(state);
+            });
         }, 500);
 
-        // --- Logic ---
-        
-        document.getElementById('btn-reset-local').onclick = () => {
-            if(confirm("Lösche lokalen Speicher für 'vtrainer_modular_v1'?")) {
-                localStorage.removeItem('vtrainer_modular_v1');
-                log("Local storage wiped. Please reload or start test.", 'warn');
-                document.getElementById('disp-short-id').textContent = "??????";
-                document.getElementById('disp-short-id').className = "block font-mono text-2xl font-black text-slate-600";
+        // --- BUTTON HANDLERS ---
+
+        // 1. LOCAL MODE (MIT DATENSCHUTZ-ABFRAGE)
+        document.getElementById('btn-mode-local').onclick = async () => {
+            const currentUser = window.VTrainerCloud.getUser();
+            const state = window.VTrainer.loadState();
+
+            if (!currentUser && !state.settings.isCloudEnabled) {
+                log("Bereits im lokalen Modus.", 'info');
+                return;
             }
-        };
 
-        document.getElementById('btn-init-test').onclick = async () => {
-            const btn = document.getElementById('btn-init-test');
-            btn.disabled = true;
-            btn.classList.add('opacity-50');
-            
+            // A) Bestätigung für Wechsel
+            if (!confirm("Verbindung zur Cloud trennen und in den lokalen Modus wechseln?")) {
+                return;
+            }
+
+            // B) Datenschutz-Abfrage
+            let deleteCloud = false;
+            if (currentUser) {
+                deleteCloud = confirm(
+                    "DATENSCHUTZ:\n\n" +
+                    "Möchtest du deine Daten in der Cloud (inkl. Lernfortschritt) endgültig löschen?\n\n" +
+                    "OK = Ja, löschen (Account wird bereinigt)\n" +
+                    "Abbrechen = Nein, Daten behalten (für späteres Login)"
+                );
+            }
+
+            log("Führe Modus-Wechsel aus...", 'warn');
+
             try {
-                log("=== STARTING CRITICAL PATH TEST ===");
-                
-                // 1. Load Local State
-                log("Loading local state...");
-                const state = window.VTrainer.loadState();
-                
-                // 2. Auth
-                log("Initializing Firebase Auth...");
-                await window.VTrainerCloud.initAuth();
-                
-                const uid = window.VTrainerCloud.getUID();
-                if(!uid) throw new Error("Auth returned no UID.");
-                
-                document.getElementById('disp-auth').textContent = "AUTHENTICATED";
-                document.getElementById('disp-auth').className = "font-mono text-green-400 font-bold";
-                document.getElementById('disp-uid').textContent = uid;
-                log("Auth Success. UID: " + uid.substring(0,8) + "...", 'success');
-
-                // 3. CRITICAL: ID Generation
-                log("Attempting to retrieve or generate Cloud ID...");
-                
-                // Force check even if state exists, to verify robustness
-                const shortId = await window.VTrainerCloud.getOrRegisterShortId(uid, state);
-                
-                // 4. Verification
-                if(shortId && typeof shortId === 'string' && shortId.length === 6) {
-                    document.getElementById('disp-short-id').textContent = shortId;
-                    document.getElementById('disp-short-id').className = "block font-mono text-2xl font-black text-indigo-400";
-                    document.getElementById('status-bar').className = "absolute top-0 left-0 w-1 h-full bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]";
-                    
-                    log(`SUCCESS: Valid Cloud ID confirmed: [${shortId}]`, 'success');
-                    log("State has been updated and persisted.", 'info');
-                } else {
-                    throw new Error("Invalid ID returned: " + shortId);
+                if (deleteCloud && currentUser) {
+                    log("Lösche Cloud-Daten...", 'warn');
+                    await window.VTrainerCloud.deleteCompleteUserData(currentUser.uid, state.settings.cloudShortId);
+                    log("Daten gelöscht.", 'success');
                 }
 
+                // C) Logout & State Reset
+                await window.VTrainerCloud.logout();
+                
+                state.settings.isCloudEnabled = false;
+                state.settings.authMethod = 'local';
+                state.settings.cloudShortId = null; // Short ID lokal vergessen
+                window.VTrainer.saveState(state);
+
+                updateAuthUI(null);
+                refreshShortID(state);
+                log("Erfolgreich auf 'Nur Lokal' gewechselt.", 'success');
+                alert("Du bist jetzt im lokalen Modus.");
+
             } catch(e) {
-                log("CRITICAL FAILURE: " + e.message, 'error');
-                console.error(e);
-                document.getElementById('status-bar').className = "absolute top-0 left-0 w-1 h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]";
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50');
-                log("=== TEST END ===");
+                log("Fehler beim Wechsel: " + e.message, 'error');
             }
         };
 
+        // 2. ANONYMOUS
+        document.getElementById('btn-mode-anon').onclick = async () => {
+            log("Starte Anonyme Anmeldung...");
+            try {
+                const user = await window.VTrainerCloud.loginAnonymous();
+                const state = window.VTrainer.loadState();
+                state.settings.isCloudEnabled = true;
+                state.settings.authMethod = 'anonymous';
+                const id = await window.VTrainerCloud.getOrRegisterShortId(user.uid, state);
+                window.VTrainer.saveState(state);
+                log(`Anonym eingeloggt. ID: ${id}`, 'success');
+                updateAuthUI(user);
+                refreshShortID(state);
+            } catch(e) { log("Fehler: " + e.message, 'error'); }
+        };
+
+        // 3. GOOGLE
+        document.getElementById('btn-mode-google').onclick = async () => {
+            const currentUser = window.VTrainerCloud.getUser();
+            if (currentUser && currentUser.isAnonymous) {
+                if(confirm("Anonymen Account in Google Account umwandeln?")) {
+                    try {
+                        const user = await window.VTrainerCloud.upgradeToGoogle();
+                        log("Upgrade erfolgreich!", 'success');
+                        const state = window.VTrainer.loadState();
+                        state.settings.authMethod = 'google';
+                        window.VTrainer.saveState(state);
+                        updateAuthUI(user);
+                        return;
+                    } catch(e) { 
+                        log("Upgrade Fehler: " + e.message, 'error');
+                        if(e.code === 'auth/credential-already-in-use') alert("Google Account wird schon verwendet.");
+                        return;
+                    }
+                }
+            }
+            try {
+                const user = await window.VTrainerCloud.loginGoogle();
+                const state = window.VTrainer.loadState();
+                state.settings.isCloudEnabled = true;
+                state.settings.authMethod = 'google';
+                window.VTrainer.saveState(state);
+                log("Google Login erfolgreich.", 'success');
+                updateAuthUI(user);
+                refreshShortID(state);
+            } catch(e) { log("Google Login Fehler: " + e.message, 'error'); }
+        };
     </script>
 </body>
 </html>
